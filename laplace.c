@@ -10,6 +10,12 @@ const int maxn = 12;
 const int before = 0;
 const int after = 1;
 
+struct LocalMatrix{
+	double* beforeLine;
+	double** tab;
+	double* afterLine;
+};
+
 // TODO get
 // TODO set
 
@@ -25,17 +31,32 @@ double get(int x, int y, int nprocs) {
 	}
 }
 
+double** malloc2D(int lines, int cols) {
+	double* tabBlock = malloc(lines * cols * sizeof(double));
+	double** tabLines = malloc(lines * sizeof(double*));
+	
+	for (int i = 0; i < lines, i++) {
+		tabLines[i] = &tabBlock[i*cols];
+	}
+	
+	return tabLines;
+}
+
+void free2D(double** tab){
+	free(tab[0]);
+	free(tab);
+}
+
 int main(int argc, char** argv) {
 	int size, rank;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	MPI_Comm_size( MPI_COMM_WORLD, &size );
 
-	struct{
-		double beforeLine[maxn];
-		double tab[maxn/size][maxn];
-		double afterLine[maxn];
-	} xlocal;
+	struct LocalMatrix xlocal;
+	xlocal.beforeLine = malloc(maxn * sizeof(double));
+	xlocal.afterLine = malloc(maxn * sizeof(double));
+	xlocal.tab = malloc2D(maxn/size, maxn);
 
 	for (int i = 0; i < maxn/size; i++) {
 		for (int j = 0; j < maxn; j++){
@@ -102,6 +123,8 @@ int main(int argc, char** argv) {
 		}
 		err = sqrt(err);
 	}
+	
+	free2D(xlocal);
 	
 	MPI_Finalize();
 	
