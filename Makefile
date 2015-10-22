@@ -1,5 +1,5 @@
 #NODE=echo gemini{1..12} | sed 's/ /,/g'
-NODE=gemini1,gemini2,gemini3,gemini4,gemini5,gemini6,gemini7,gemini8,gemini9,gemini10,gemini11,gemini12
+NODE=pc5103a,pc5103b,pc5103c,pc5103d,pc5103e,pc5103f,pc5103g,pc5103h,pc5103i,pc5103j,pc5103k,pc5103l
 pi: pi.c
 	@mpicc -Wall -Wextra -std=gnu99 -lm $<
 
