@@ -16,18 +16,18 @@ struct LocalMatrix{
 	double* afterLine;
 };
 
-// TODO get
+// To test get
 // TODO set
 
-double get(int x, int y, int nprocs) {
+double get(struct LocalMatrix* matrix, int x, int y, int nprocs) {
 	if (x == 0) {
-		return beforeLine[y];
+		return matrix->beforeLine[y];
 	}
 	else if (x == maxn/nprocs+1) {
-		return afterLine[y];
+		return matrix->afterLine[y];
 	}
 	else {
-		
+		return matrix->tab[x-1][y];
 	}
 }
 
@@ -35,7 +35,7 @@ double** malloc2D(int lines, int cols) {
 	double* tabBlock = malloc(lines * cols * sizeof(double));
 	double** tabLines = malloc(lines * sizeof(double*));
 	
-	for (int i = 0; i < lines, i++) {
+	for (int i = 0; i < lines; i++) {
 		tabLines[i] = &tabBlock[i*cols];
 	}
 	
@@ -111,20 +111,23 @@ int main(int argc, char** argv) {
 	double delta = 0.001;
 	while (err > delta) {
 		err = 0;
-		for ( i = 0; i < maxn/size+2; i++) {
-			for (j = 0; j < maxn; j++) {
-				fnyu = 0.25 * (
-					get(i+1, j) + get(i-1, j) + get(i, j+1) + get(i, j-1)
+		for (int i = 0; i < maxn/size+2; i++) {
+			for (int j = 0; j < maxn; j++) {
+				double fnyu = 0.25 * (
+					get(&xlocal, i+1, j, size) +
+					get(&xlocal, i-1, j, size) +
+					get(&xlocal, i, j+1, size) + 
+					get(&xlocal, i, j-1, size)
 				);
-				err += fnyu - get(i, j);
+				err += fnyu - get(&xlocal, i, j, size);
 				err *= err;
-				set(i, j, fnyu);
+				//set(i, j, fnyu);
 			}
 		}
 		err = sqrt(err);
 	}
 	
-	free2D(xlocal);
+	free2D(xlocal.tab);
 	
 	MPI_Finalize();
 	
