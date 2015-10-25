@@ -131,3 +131,37 @@ void sendLine(
     
     MPI_Send(line, nmatrix, MPI_DOUBLE, rank, tag, MPI_COMM_WORLD);
 }
+
+/**
+ * Receives a lines from another process using MPI.
+ * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
+ * one line before, and one line after.
+ * @param nprocs Number of processes currently running this program.
+ * @param nmatrix Size of the matrix resulting from the combination of the
+ * local matrices on all the processes.
+ * @param x Index of the line to fill with the incoming data.
+ * @param rank Rank of the source.
+ * @param tag Mesasge tag.
+ */
+void receiveLine(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix,
+    int x, int rank, int tag
+) {
+    int lines = nmatrix/nprocs + 2;
+    double* line = NULL;
+    
+    if (x == 0) {
+        line = matrix->beforeLine;
+    }
+    else if (x == lines - 1) {
+        line = matrix->afterLine;
+    }
+    else {
+        line = matrix->matrix[x];
+    }
+    
+    MPI_Recv(
+        line, nmatrix, MPI_DOUBLE, rank, tag,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE
+    );
+}

@@ -22,5 +22,9 @@ void sendLine(
     struct LocalMatrix* matrix, int nprocs, int nmatrix,
     int x, int rank, int tag
 );
+void receiveLine(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix,
+    int x, int rank, int tag
+);
 
 #endif // MATRIX
