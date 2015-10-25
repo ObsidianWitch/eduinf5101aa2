@@ -1,35 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "matrix.h"
 #include "mpi.h"
+#include "matrix.h"
+#include "array2D.h"
 
 const int BEFORE_TAG = 0;
 const int AFTER_TAG = 1;
-
-/**
- * Allocates a 2D array.
- * @param lines
- * @param cols
- */
-double** malloc2D(int lines, int cols) {
-    double*  arrayBlock = malloc(lines * cols * sizeof(double));
-    double** arrayLines = malloc(lines * sizeof(double*));
-    
-    for (int i = 0 ; i < lines ; i++) {
-    	arrayLines[i] = &arrayBlock[i*cols];
-    }
-    
-    return arrayLines;
-}
-
-/**
- * Frees a 2D array.
- * @param array
- */
-void free2D(double** array) {
-	free(array[0]);
-	free(array);
-}
 
 struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
     int lines = nmatrix/nprocs;
