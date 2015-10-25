@@ -44,6 +44,47 @@ struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
 }
 
 /**
+ * Initializes localMatrix.
+ * first process: initializes beforeLine with -1
+ * last process: initializes afterLine with -1
+ * all processes: initializes inner matrix with rank
+ */
+void localInitialization(
+	struct LocalMatrix* matrix, int nprocs, int nmatrix, int rank
+) {
+	fillInner(matrix, nprocs, nmatrix, rank);
+	if (rank == 0) {
+		fillBeforeLine(matrix, nmatrix, -1);
+	}
+	else if (rank == nprocs - 1) {
+		fillAfterLine(matrix, nmatrix, -1);
+	}
+}
+
+/**
+ * Initializes localMatrix's afterLine & beforeLine by sending and receiving
+ * data from other processes using MPI.
+ */
+void remoteInitialization(
+	struct LocalMatrix* matrix, int nprocs, int nmatrix, int rank
+) {
+	if (rank == 0) {
+		sendLastToBeforeLine(matrix, nprocs, nmatrix, rank);
+		recvAfterFromFirstLine(matrix, nmatrix, rank);
+	}
+	else if (rank == nprocs - 1) {
+		sendFirstToAfterLine(matrix, nmatrix, rank);
+		recvBeforeFromLastLine(matrix, nmatrix, rank);
+	}
+	else {
+		sendLastToBeforeLine(matrix, nprocs, nmatrix, rank);
+		sendFirstToAfterLine(matrix, nmatrix, rank);
+		recvAfterFromFirstLine(matrix, nmatrix, rank);
+		recvBeforeFromLastLine(matrix, nmatrix, rank);
+	}
+}
+
+/**
  * Retrieves the (x,y) element inside the specified matrix.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.

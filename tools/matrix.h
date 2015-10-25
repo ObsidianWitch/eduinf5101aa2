@@ -11,6 +11,12 @@ double** malloc2D(int lines, int cols);
 void free2D(double** array);
 
 struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix);
+void localInitialization(
+	struct LocalMatrix* matrix, int nprocs, int nmatrix, int rank
+);
+void remoteInitialization(
+	struct LocalMatrix* matrix, int nprocs, int nmatrix, int rank
+);
 
 double get(struct LocalMatrix* matrix, int nprocs, int nmatrix, int x, int y);
 void set(
