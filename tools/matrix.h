@@ -26,5 +26,6 @@ void receiveLine(
     struct LocalMatrix* matrix, int nprocs, int nmatrix,
     int x, int rank, int tag
 );
+void display(struct LocalMatrix* matrix, int nprocs, int nmatrix);
 
 #endif // MATRIX

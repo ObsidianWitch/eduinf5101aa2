@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "matrix.h"
 #include "mpi.h"
 
@@ -164,4 +165,24 @@ void receiveLine(
         line, nmatrix, MPI_DOUBLE, rank, tag,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
+}
+
+/**
+ * Displays the matrix.
+ * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
+ * one line before, and one line after.
+ * @param nprocs Number of processes currently running this program.
+ * @param nmatrix Size of the matrix resulting from the combination of the
+ * local matrices on all the processes.
+ */
+void display(struct LocalMatrix* matrix, int nprocs, int nmatrix) {
+    int lines = nmatrix/nprocs + 2;
+    
+    for (int i = 0 ; i < lines ; i++) {
+        for (int j = 0 ; j < nmatrix ; j++) {
+            double value = get(matrix, nprocs, nmatrix, i, j);
+            printf("%2.0f ", value);
+        }
+        printf("\n");
+    }
 }
