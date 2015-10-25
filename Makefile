@@ -2,7 +2,7 @@ SHELL = /bin/bash
 FLAGS = -Wall -Wextra -std=gnu99 -lm
 NODE = `echo gemini{1..12} | sed 's/ /,/g'`
 TASKS = 12
-INCLUDES = tools/matrix.h tools/matrix.c
+INCLUDES = tools/array2D.h tools/array2D.c tools/matrix.h tools/matrix.c
 
 pi: pi.c
 	mpicc ${FLAGS} -o pi.out $<
