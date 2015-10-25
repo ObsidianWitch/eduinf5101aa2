@@ -1,15 +1,20 @@
-#NODE=echo gemini{1..12} | sed 's/ /,/g'
-NODE=pc5103a,pc5103b,pc5103c,pc5103d,pc5103e,pc5103f,pc5103g,pc5103h,pc5103i,pc5103j,pc5103k,pc5103l
+SHELL = /bin/bash
+FLAGS = -Wall -Wextra -std=gnu99 -lm
+NODE = `echo gemini{1..12} | sed 's/ /,/g'`
+TASKS = 12
+INCLUDES = tools/matrix.h tools/matrix.c
+
 pi: pi.c
-	mpicc -Wall -Wextra -std=gnu99 -lm $<
+	mpicc ${FLAGS} -o pi.out $<
+	mpirun -host ${NODE} -np ${TASKS} ./pi.out
 
 grid: grid.c
-	mpicc -Wall -Wextra -std=gnu99 -lm $<
-	mpirun -host ${NODE} -np 12 ./a.out
+	mpicc ${FLAGS} -o grid.out ${INCLUDES} $<
+	mpirun -host ${NODE} -np ${TASKS} ./grid.out
 
 laplace: laplace.c
-	mpicc -Wall -Wextra -std=gnu99 -lm $<
-	mpirun -host ${NODE} -np -12 ./a.out
+	mpicc ${FLAGS} -o laplace.out ${INCLUDES} $<
+	mpirun -host ${NODE} -np ${TASKS} ./laplace.out
 
-run:
-	mpirun -host ${NODE} -np 96 ./a.out
+clean:
+	rm -f *.out
