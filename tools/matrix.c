@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "matrix.h"
+#include "mpi.h"
 
 /**
  * Allocates a 2D array.
@@ -80,7 +81,7 @@ void set(
 
 /**
  * Fills the matrix contained in the specified LocalMatrix instance. Do not
- * modifiy the values inside beforeLine and afterLine.
+ * modify the values inside beforeLine and afterLine.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.
  * @param nprocs Number of processes currently running this program.
@@ -98,4 +99,35 @@ void fillInner(
             matrix->matrix[i][j] = value;
         }
     }
+}
+
+/**
+ * Sends a line to another process using MPI.
+ * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
+ * one line before, and one line after.
+ * @param nprocs Number of processes currently running this program.
+ * @param nmatrix Size of the matrix resulting from the combination of the
+ * local matrices on all the processes.
+ * @param x Index of the line to send.
+ * @param rank Rank of the receiver.
+ * @param tag Mesasge tag.
+ */
+void sendLine(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix,
+    int x, int rank, int tag
+) {
+    int lines = nmatrix/nprocs + 2;
+    double* line = NULL;
+    
+    if (x == 0) {
+        line = matrix->beforeLine;
+    }
+    else if (x == lines - 1) {
+        line = matrix->afterLine;
+    }
+    else {
+        line = matrix->matrix[x];
+    }
+    
+    MPI_Send(line, nmatrix, MPI_DOUBLE, rank, tag, MPI_COMM_WORLD);
 }
