@@ -12,13 +12,13 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     struct LocalMatrix localMatrix = createLocalMatrix(nprocs, N_MATRIX);
-    localInitialization(&localMatrix, nprocs, N_MATRIX, rank);
-    remoteInitialization(&localMatrix, nprocs, N_MATRIX, rank);
+    localInitialization(&localMatrix, nprocs, rank);
+    remoteInitialization(&localMatrix, nprocs, rank);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     printf("rank: %d\n", rank);
-    display(&localMatrix, nprocs, N_MATRIX);
+    display(&localMatrix);
     printf("\n");
 
     destructLocalMatrix(&localMatrix);

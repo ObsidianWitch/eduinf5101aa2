@@ -16,6 +16,10 @@ struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
     localMatrix.afterLine = malloc(cols * sizeof(double));
     localMatrix.matrix = malloc2D(lines, cols);
     
+    localMatrix.innerLines = lines;
+    localMatrix.totalLines = lines + 2;
+    localMatrix.cols = cols;
+    
     return localMatrix;
 }
 
@@ -31,58 +35,49 @@ void destructLocalMatrix(struct LocalMatrix* matrix) {
  * last process: initializes afterLine with -1
  * all processes: initializes inner matrix with rank
  */
-void localInitialization(
-	struct LocalMatrix* matrix, int nprocs, int nmatrix, int rank
-) {
-	fillInner(matrix, nprocs, nmatrix, rank);
-	if (rank == 0) {
-		fillBeforeLine(matrix, nmatrix, -1);
-	}
-	else if (rank == nprocs - 1) {
-		fillAfterLine(matrix, nmatrix, -1);
-	}
+void localInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
+    fillInner(matrix, rank);
+    if (rank == 0) {
+        fillBeforeLine(matrix, -1);
+    }
+    else if (rank == nprocs - 1) {
+        fillAfterLine(matrix, -1);
+    }
 }
 
 /**
  * Initializes localMatrix's afterLine & beforeLine by sending and receiving
  * data from other processes using MPI.
  */
-void remoteInitialization(
-	struct LocalMatrix* matrix, int nprocs, int nmatrix, int rank
-) {
-	if (rank == 0) {
-		sendLastToBeforeLine(matrix, nprocs, nmatrix, rank);
-		recvAfterFromFirstLine(matrix, nmatrix, rank);
-	}
-	else if (rank == nprocs - 1) {
-		sendFirstToAfterLine(matrix, nmatrix, rank);
-		recvBeforeFromLastLine(matrix, nmatrix, rank);
-	}
-	else {
-		sendLastToBeforeLine(matrix, nprocs, nmatrix, rank);
-		sendFirstToAfterLine(matrix, nmatrix, rank);
-		recvAfterFromFirstLine(matrix, nmatrix, rank);
-		recvBeforeFromLastLine(matrix, nmatrix, rank);
-	}
+void remoteInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
+    if (rank == 0) {
+        sendLastToBeforeLine(matrix, rank);
+        recvAfterFromFirstLine(matrix, rank);
+    }
+    else if (rank == nprocs - 1) {
+        sendFirstToAfterLine(matrix, rank);
+        recvBeforeFromLastLine(matrix, rank);
+    }
+    else {
+        sendLastToBeforeLine(matrix, rank);
+        sendFirstToAfterLine(matrix, rank);
+        recvAfterFromFirstLine(matrix, rank);
+        recvBeforeFromLastLine(matrix, rank);
+    }
 }
 
 /**
  * Retrieves the (x,y) element inside the specified matrix.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.
- * @param nprocs Number of processes currently running this program.
- * @param nmatrix Size of the matrix resulting from the combination of the
- * local matrices on all the processes.
  * @param x
  * @param y
  */
-double get(struct LocalMatrix* matrix, int nprocs, int nmatrix, int x, int y) {
-    int lines = nmatrix/nprocs + 2;
-    
+double get(struct LocalMatrix* matrix, int x, int y) {
     if (x == 0) {
         return matrix->beforeLine[y];
     }
-    else if (x == lines - 1) {
+    else if (x == matrix->totalLines - 1) {
         return matrix->afterLine[y];
     }
     else {
@@ -94,23 +89,15 @@ double get(struct LocalMatrix* matrix, int nprocs, int nmatrix, int x, int y) {
  * Sets a value to the (x,y) element inside the specified matrix.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.
- * @param nprocs Number of processes currently running this program.
- * @param nmatrix Size of the matrix resulting from the combination of the
- * local matrices on all the processes.
  * @param x
  * @param y
  * @param value
  */
-void set(
-    struct LocalMatrix* matrix, int nprocs, int nmatrix,
-    int x, int y, double value
-) {
-    int lines = nmatrix/nprocs + 2;
-    
+void set(struct LocalMatrix* matrix, int x, int y, double value) {
     if (x == 0) {
         matrix->beforeLine[y] = value;
     }
-    else if (x == lines - 1) {
+    else if (x == matrix->totalLines - 1) {
         matrix->afterLine[y] = value;
     }
     else {
@@ -123,18 +110,11 @@ void set(
  * modify the values inside beforeLine and afterLine.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.
- * @param nprocs Number of processes currently running this program.
- * @param nmatrix Size of the matrix resulting from the combination of the
- * local matrices on all the processes.
  * @param value
  */
-void fillInner(
-    struct LocalMatrix* matrix, int nprocs, int nmatrix, double value
-) {
-    int lines = nmatrix/nprocs;
-    
-    for (int i = 0 ; i < lines ; i++) {
-        for (int j = 0 ; j < nmatrix ; j++) {
+void fillInner(struct LocalMatrix* matrix, double value) {
+    for (int i = 0 ; i < matrix->innerLines ; i++) {
+        for (int j = 0 ; j < matrix->cols ; j++) {
             matrix->matrix[i][j] = value;
         }
     }
@@ -143,8 +123,8 @@ void fillInner(
 /**
  * Fills beforeLine with value.
  */
-void fillBeforeLine(struct LocalMatrix* matrix, int nmatrix, double value) {
-    for (int j = 0 ; j < nmatrix ; j++) {
+void fillBeforeLine(struct LocalMatrix* matrix, double value) {
+    for (int j = 0 ; j < matrix->cols ; j++) {
         matrix->beforeLine[j] = value;
     }
 }
@@ -152,8 +132,8 @@ void fillBeforeLine(struct LocalMatrix* matrix, int nmatrix, double value) {
 /**
  * Fills afterLine with value.
  */
-void fillAfterLine(struct LocalMatrix* matrix, int nmatrix, double value) {
-    for (int j = 0 ; j < nmatrix ; j++) {
+void fillAfterLine(struct LocalMatrix* matrix, double value) {
+    for (int j = 0 ; j < matrix->cols ; j++) {
         matrix->afterLine[j] = value;
     }
 }
@@ -162,13 +142,11 @@ void fillAfterLine(struct LocalMatrix* matrix, int nmatrix, double value) {
  * Sends the last line from the current process' inner matrix to the beforeLine
  * of the next process
  */
-void sendLastToBeforeLine(
-    struct LocalMatrix* matrix, int nprocs, int nmatrix, int currentRank
-) {
-    int i = nmatrix/nprocs - 1;
+void sendLastToBeforeLine(struct LocalMatrix* matrix, int currentRank) {
+    int i = matrix->innerLines - 1;
     
     MPI_Send(
-        matrix->matrix[i], nmatrix, MPI_DOUBLE,
+        matrix->matrix[i], matrix->cols, MPI_DOUBLE,
         currentRank + 1, BEFORE_TAG, MPI_COMM_WORLD
     );
 }
@@ -177,11 +155,9 @@ void sendLastToBeforeLine(
  * Sends the first line from the current process' inner matrix to the afterLine
  * of the previous process
  */
-void sendFirstToAfterLine(
-    struct LocalMatrix* matrix, int nmatrix, int currentRank
-) {
+void sendFirstToAfterLine(struct LocalMatrix* matrix, int currentRank) {
     MPI_Send(
-        matrix->matrix[0], nmatrix, MPI_DOUBLE,
+        matrix->matrix[0], matrix->cols, MPI_DOUBLE,
         currentRank - 1, AFTER_TAG, MPI_COMM_WORLD
     );
 }
@@ -190,11 +166,9 @@ void sendFirstToAfterLine(
  * Receives the first line from the next process inner matrix and stores it in
  * the LocalMatrix's afterLine.
  */
-void recvAfterFromFirstLine(
-    struct LocalMatrix* matrix, int nmatrix, int currentRank
-) {
+void recvAfterFromFirstLine(struct LocalMatrix* matrix, int currentRank) {
     MPI_Recv(
-        matrix->afterLine, nmatrix, MPI_DOUBLE,
+        matrix->afterLine, matrix->cols, MPI_DOUBLE,
         currentRank + 1, AFTER_TAG,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
@@ -204,11 +178,9 @@ void recvAfterFromFirstLine(
  * Receives the last line from the previous process inner matrix and stores it
  * in the LocalMatrix's beforeLine.
  */
-void recvBeforeFromLastLine(
-    struct LocalMatrix* matrix, int nmatrix, int currentRank
-) {
+void recvBeforeFromLastLine(struct LocalMatrix* matrix, int currentRank) {
     MPI_Recv(
-        matrix->beforeLine, nmatrix, MPI_DOUBLE,
+        matrix->beforeLine, matrix->cols, MPI_DOUBLE,
         currentRank - 1, BEFORE_TAG,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
@@ -218,16 +190,11 @@ void recvBeforeFromLastLine(
  * Displays the matrix.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.
- * @param nprocs Number of processes currently running this program.
- * @param nmatrix Size of the matrix resulting from the combination of the
- * local matrices on all the processes.
  */
-void display(struct LocalMatrix* matrix, int nprocs, int nmatrix) {
-    int lines = nmatrix/nprocs + 2;
-    
-    for (int i = 0 ; i < lines ; i++) {
-        for (int j = 0 ; j < nmatrix ; j++) {
-            double value = get(matrix, nprocs, nmatrix, i, j);
+void display(struct LocalMatrix* matrix) {
+    for (int i = 0 ; i < matrix->totalLines ; i++) {
+        for (int j = 0 ; j < matrix->cols ; j++) {
+            double value = get(matrix, i, j);
             printf("%2.0f ", value);
         }
         printf("\n");
