@@ -10,6 +10,7 @@ struct LocalMatrix {
 double** malloc2D(int lines, int cols);
 void free2D(double** array);
 
+struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix);
 double get(struct LocalMatrix* matrix, int nprocs, int nmatrix, int x, int y);
 void set(
     struct LocalMatrix* matrix, int nprocs, int nmatrix,

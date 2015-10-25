@@ -28,6 +28,18 @@ void free2D(double** array) {
 	free(array);
 }
 
+struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
+    int lines = nmatrix/nprocs;
+    int cols = nmatrix;
+    
+    struct LocalMatrix localMatrix;
+    localMatrix.beforeLine = malloc(cols * sizeof(double));
+    localMatrix.afterLine = malloc(cols * sizeof(double));
+    localMatrix.matrix = malloc2D(lines, cols);
+    
+    return localMatrix;
+}
+
 /**
  * Retrieves the (x,y) element inside the specified matrix.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
