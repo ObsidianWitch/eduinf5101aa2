@@ -77,3 +77,25 @@ void set(
         matrix->matrix[x - 1][y] = value;
     }
 }
+
+/**
+ * Fills the matrix contained in the specified LocalMatrix instance. Do not
+ * modifiy the values inside beforeLine and afterLine.
+ * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
+ * one line before, and one line after.
+ * @param nprocs Number of processes currently running this program.
+ * @param nmatrix Size of the matrix resulting from the combination of the
+ * local matrices on all the processes.
+ * @param value
+ */
+void fillInner(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix, double value
+) {
+    int lines = nmatrix/nprocs;
+    
+    for (int i = 0 ; i < lines ; i++) {
+        for (int j = 0 ; j < nmatrix ; j++) {
+            matrix->matrix[i][j] = value;
+        }
+    }
+}

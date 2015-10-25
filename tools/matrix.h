@@ -15,5 +15,8 @@ void set(
     struct LocalMatrix* matrix, int nprocs, int nmatrix,
     int x, int y, double value
 );
+void fillInner(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix, double value
+);
 
 #endif // MATRIX
