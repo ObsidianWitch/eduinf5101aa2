@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
-#include "tools/matrix.h"
+#include "tools/local_matrix.h"
 
 const int N_MATRIX = 12;
 

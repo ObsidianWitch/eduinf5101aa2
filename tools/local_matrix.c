@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
-#include "matrix.h"
+#include "local_matrix.h"
 #include "array2D.h"
 
 const int BEFORE_TAG = 0;
