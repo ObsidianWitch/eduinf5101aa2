@@ -12,14 +12,14 @@ const int AFTER_TAG = 1;
  * @param cols
  */
 double** malloc2D(int lines, int cols) {
-	double*  arrayBlock = malloc(lines * cols * sizeof(double));
-	double** arrayLines = malloc(lines * sizeof(double*));
-	
-	for (int i = 0 ; i < lines ; i++) {
-		arrayLines[i] = &arrayBlock[i*cols];
-	}
-	
-	return arrayLines;
+    double*  arrayBlock = malloc(lines * cols * sizeof(double));
+    double** arrayLines = malloc(lines * sizeof(double*));
+    
+    for (int i = 0 ; i < lines ; i++) {
+    	arrayLines[i] = &arrayBlock[i*cols];
+    }
+    
+    return arrayLines;
 }
 
 /**
@@ -114,6 +114,24 @@ void fillInner(
         for (int j = 0 ; j < nmatrix ; j++) {
             matrix->matrix[i][j] = value;
         }
+    }
+}
+
+/**
+ * Fills beforeLine with value.
+ */
+void fillBeforeLine(struct LocalMatrix* matrix, int nmatrix, double value) {
+    for (int j = 0 ; j < nmatrix ; j++) {
+        matrix->beforeLine[j] = value;
+    }
+}
+
+/**
+ * Fills afterLine with value.
+ */
+void fillAfterLine(struct LocalMatrix* matrix, int nmatrix, double value) {
+    for (int j = 0 ; j < nmatrix ; j++) {
+        matrix->afterLine[j] = value;
     }
 }
 
