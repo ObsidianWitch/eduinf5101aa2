@@ -49,3 +49,31 @@ double get(struct LocalMatrix* matrix, int nprocs, int nmatrix, int x, int y) {
         return matrix->matrix[x - 1][y];
     }
 }
+
+/**
+ * Sets a value to the (x,y) element inside the specified matrix.
+ * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
+ * one line before, and one line after.
+ * @param nprocs Number of processes currently running this program.
+ * @param nmatrix Size of the matrix resulting from the combination of the
+ * local matrices on all the processes.
+ * @param x
+ * @param y
+ * @param value
+ */
+void set(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix,
+    int x, int y, double value
+) {
+    int lines = nmatrix/nprocs + 2;
+    
+    if (x == 0) {
+        matrix->beforeLine[y] = value;
+    }
+    else if (x == lines - 1) {
+        matrix->afterLine[y] = value;
+    }
+    else {
+        matrix->matrix[x - 1][y] = value;
+    }
+}
