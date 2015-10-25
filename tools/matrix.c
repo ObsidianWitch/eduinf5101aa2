@@ -19,6 +19,12 @@ struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
     return localMatrix;
 }
 
+void destructLocalMatrix(struct LocalMatrix* matrix) {
+    free(matrix->beforeLine);
+    free(matrix->afterLine);
+    free2D(matrix->matrix);
+}
+
 /**
  * Initializes localMatrix.
  * first process: initializes beforeLine with -1

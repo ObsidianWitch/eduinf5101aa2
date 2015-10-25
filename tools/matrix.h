@@ -7,10 +7,9 @@ struct LocalMatrix {
 	double* afterLine;
 };
 
-double** malloc2D(int lines, int cols);
-void free2D(double** array);
-
 struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix);
+void destructLocalMatrix(struct LocalMatrix* matrix);
+
 void localInitialization(
 	struct LocalMatrix* matrix, int nprocs, int nmatrix, int rank
 );
