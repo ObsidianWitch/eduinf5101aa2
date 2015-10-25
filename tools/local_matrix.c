@@ -50,19 +50,14 @@ void localInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
  * data from other processes using MPI.
  */
 void remoteInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
-    if (rank == 0) {
-        sendLastToBeforeLine(matrix, rank);
-        recvAfterFromFirstLine(matrix, rank);
-    }
-    else if (rank == nprocs - 1) {
+    if (rank > 0) {
         sendFirstToAfterLine(matrix, rank);
         recvBeforeFromLastLine(matrix, rank);
     }
-    else {
+    
+    if (rank < nprocs - 1) {
         sendLastToBeforeLine(matrix, rank);
-        sendFirstToAfterLine(matrix, rank);
         recvAfterFromFirstLine(matrix, rank);
-        recvBeforeFromLastLine(matrix, rank);
     }
 }
 
