@@ -30,5 +30,7 @@ void recvAfterFromFirstLine(struct LocalMatrix* matrix, int currentRank);
 void recvBeforeFromLastLine(struct LocalMatrix* matrix, int currentRank);
 
 void display(struct LocalMatrix* matrix);
+void writeMatrix(struct LocalMatrix* matrix, char* fileName);
+void WriteFullMatrix(struct LocalMatrix* matrix, int nprocs, int rank);
 
 #endif // MATRIX

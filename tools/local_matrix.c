@@ -1,11 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include "mpi.h"
 #include "local_matrix.h"
 #include "array2D.h"
 
 const int BEFORE_TAG = 0;
 const int AFTER_TAG = 1;
+const int DISPLAY_TAG = 2;
 
 struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
     int lines = nmatrix/nprocs;
@@ -182,16 +184,58 @@ void recvBeforeFromLastLine(struct LocalMatrix* matrix, int currentRank) {
 }
 
 /**
- * Displays the matrix.
+ * Displays the specified LocalMatrix.
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.
  */
-void display(struct LocalMatrix* matrix) {
+void displayMatrix(struct LocalMatrix* matrix) {
     for (int i = 0 ; i < matrix->totalLines ; i++) {
         for (int j = 0 ; j < matrix->cols ; j++) {
             double value = get(matrix, i, j);
             printf("%2.0f ", value);
         }
         printf("\n");
+    }
+}
+
+/**
+ * Writes the specified LocalMatrix to a file.
+ */
+void writeMatrix(struct LocalMatrix* matrix, char* fileName) {
+    FILE* f = fopen(fileName, "a");
+    if (f == NULL) { perror("fopen"); }
+    
+    for (int i = 0 ; i < matrix->totalLines ; i++) {
+        for (int j = 0 ; j < matrix->cols ; j++) {
+            double value = get(matrix, i, j);
+            fprintf(f, "%2.0f ", value);
+        }
+        fprintf(f, "\n");
+    }
+    fprintf(f, "\n");
+    
+    fclose(f);
+}
+
+/**
+ * Writes the full matrix by telling each process to write its LocalMatrix in
+ * a file. The processes write in the correct order by using a token ring.
+ */
+void WriteFullMatrix(struct LocalMatrix* matrix, int nprocs, int rank) {
+    if (rank == 0) { remove("matrix.out"); }
+    
+    if (rank != 0) {
+        int tmp = 0;
+        MPI_Recv(
+            &tmp, 1, MPI_INT, rank - 1, DISPLAY_TAG,
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE
+        );
+    }
+    
+    writeMatrix(matrix, "matrix.out");
+    
+    if (rank != nprocs - 1) {
+        int tmp = 0;
+        MPI_Send(&tmp, 1, MPI_INT, rank + 1, DISPLAY_TAG, MPI_COMM_WORLD);
     }
 }

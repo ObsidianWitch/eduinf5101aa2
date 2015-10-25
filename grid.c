@@ -17,9 +17,7 @@ int main(int argc, char** argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    printf("rank: %d\n", rank);
-    display(&localMatrix);
-    printf("\n");
+    WriteFullMatrix(&localMatrix, nprocs, rank);
 
     destructLocalMatrix(&localMatrix);
 
