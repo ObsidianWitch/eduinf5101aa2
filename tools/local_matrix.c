@@ -9,11 +9,11 @@ const int BEFORE_TAG = 0;
 const int AFTER_TAG = 1;
 const int DISPLAY_TAG = 2;
 
-struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
+LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
     int lines = nmatrix/nprocs;
     int cols = nmatrix;
     
-    struct LocalMatrix localMatrix;
+    LocalMatrix localMatrix;
     localMatrix.beforeLine = malloc(cols * sizeof(double));
     localMatrix.afterLine = malloc(cols * sizeof(double));
     localMatrix.matrix = malloc2D(lines, cols);
@@ -25,7 +25,7 @@ struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
     return localMatrix;
 }
 
-void destructLocalMatrix(struct LocalMatrix* matrix) {
+void destructLocalMatrix(LocalMatrix* matrix) {
     free(matrix->beforeLine);
     free(matrix->afterLine);
     free2D(matrix->matrix);
@@ -37,7 +37,7 @@ void destructLocalMatrix(struct LocalMatrix* matrix) {
  * last process: initializes afterLine with -1
  * all processes: initializes inner matrix with rank
  */
-void localInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
+void localInitialization(LocalMatrix* matrix, int nprocs, int rank) {
     fillInner(matrix, rank);
     if (rank == 0) {
         fillBeforeLine(matrix, -1);
@@ -51,7 +51,7 @@ void localInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
  * Initializes localMatrix's afterLine & beforeLine by sending and receiving
  * data from other processes using MPI.
  */
-void remoteInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
+void remoteInitialization(LocalMatrix* matrix, int nprocs, int rank) {
     if (rank > 0) {
         sendFirstToAfterLine(matrix, rank);
         recvBeforeFromLastLine(matrix, rank);
@@ -70,7 +70,7 @@ void remoteInitialization(struct LocalMatrix* matrix, int nprocs, int rank) {
  * @param x
  * @param y
  */
-double get(struct LocalMatrix* matrix, int x, int y) {
+double get(LocalMatrix* matrix, int x, int y) {
     if (x == 0) {
         return matrix->beforeLine[y];
     }
@@ -90,7 +90,7 @@ double get(struct LocalMatrix* matrix, int x, int y) {
  * @param y
  * @param value
  */
-void set(struct LocalMatrix* matrix, int x, int y, double value) {
+void set(LocalMatrix* matrix, int x, int y, double value) {
     if (x == 0) {
         matrix->beforeLine[y] = value;
     }
@@ -109,7 +109,7 @@ void set(struct LocalMatrix* matrix, int x, int y, double value) {
  * one line before, and one line after.
  * @param value
  */
-void fillInner(struct LocalMatrix* matrix, double value) {
+void fillInner(LocalMatrix* matrix, double value) {
     for (int i = 0 ; i < matrix->innerLines ; i++) {
         for (int j = 0 ; j < matrix->cols ; j++) {
             matrix->matrix[i][j] = value;
@@ -120,7 +120,7 @@ void fillInner(struct LocalMatrix* matrix, double value) {
 /**
  * Fills beforeLine with value.
  */
-void fillBeforeLine(struct LocalMatrix* matrix, double value) {
+void fillBeforeLine(LocalMatrix* matrix, double value) {
     for (int j = 0 ; j < matrix->cols ; j++) {
         matrix->beforeLine[j] = value;
     }
@@ -129,7 +129,7 @@ void fillBeforeLine(struct LocalMatrix* matrix, double value) {
 /**
  * Fills afterLine with value.
  */
-void fillAfterLine(struct LocalMatrix* matrix, double value) {
+void fillAfterLine(LocalMatrix* matrix, double value) {
     for (int j = 0 ; j < matrix->cols ; j++) {
         matrix->afterLine[j] = value;
     }
@@ -139,7 +139,7 @@ void fillAfterLine(struct LocalMatrix* matrix, double value) {
  * Sends the last line from the current process' inner matrix to the beforeLine
  * of the next process
  */
-void sendLastToBeforeLine(struct LocalMatrix* matrix, int currentRank) {
+void sendLastToBeforeLine(LocalMatrix* matrix, int currentRank) {
     int i = matrix->innerLines - 1;
     
     MPI_Send(
@@ -152,7 +152,7 @@ void sendLastToBeforeLine(struct LocalMatrix* matrix, int currentRank) {
  * Sends the first line from the current process' inner matrix to the afterLine
  * of the previous process
  */
-void sendFirstToAfterLine(struct LocalMatrix* matrix, int currentRank) {
+void sendFirstToAfterLine(LocalMatrix* matrix, int currentRank) {
     MPI_Send(
         matrix->matrix[0], matrix->cols, MPI_DOUBLE,
         currentRank - 1, AFTER_TAG, MPI_COMM_WORLD
@@ -163,7 +163,7 @@ void sendFirstToAfterLine(struct LocalMatrix* matrix, int currentRank) {
  * Receives the first line from the next process inner matrix and stores it in
  * the LocalMatrix's afterLine.
  */
-void recvAfterFromFirstLine(struct LocalMatrix* matrix, int currentRank) {
+void recvAfterFromFirstLine(LocalMatrix* matrix, int currentRank) {
     MPI_Recv(
         matrix->afterLine, matrix->cols, MPI_DOUBLE,
         currentRank + 1, AFTER_TAG,
@@ -175,7 +175,7 @@ void recvAfterFromFirstLine(struct LocalMatrix* matrix, int currentRank) {
  * Receives the last line from the previous process inner matrix and stores it
  * in the LocalMatrix's beforeLine.
  */
-void recvBeforeFromLastLine(struct LocalMatrix* matrix, int currentRank) {
+void recvBeforeFromLastLine(LocalMatrix* matrix, int currentRank) {
     MPI_Recv(
         matrix->beforeLine, matrix->cols, MPI_DOUBLE,
         currentRank - 1, BEFORE_TAG,
@@ -188,7 +188,7 @@ void recvBeforeFromLastLine(struct LocalMatrix* matrix, int currentRank) {
  * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
  * one line before, and one line after.
  */
-void displayMatrix(struct LocalMatrix* matrix) {
+void displayMatrix(LocalMatrix* matrix) {
     for (int i = 0 ; i < matrix->totalLines ; i++) {
         for (int j = 0 ; j < matrix->cols ; j++) {
             double value = get(matrix, i, j);
@@ -201,7 +201,7 @@ void displayMatrix(struct LocalMatrix* matrix) {
 /**
  * Writes the specified LocalMatrix to a file.
  */
-void writeMatrix(struct LocalMatrix* matrix, char* fileName) {
+void writeMatrix(LocalMatrix* matrix, char* fileName) {
     FILE* f = fopen(fileName, "a");
     if (f == NULL) { perror("fopen"); }
     
@@ -221,7 +221,7 @@ void writeMatrix(struct LocalMatrix* matrix, char* fileName) {
  * Writes the full matrix by telling each process to write its LocalMatrix in
  * a file. The processes write in the correct order by using a token ring.
  */
-void WriteFullMatrix(struct LocalMatrix* matrix, int nprocs, int rank) {
+void WriteFullMatrix(LocalMatrix* matrix, int nprocs, int rank) {
     if (rank == 0) { remove("matrix.out"); }
     
     if (rank != 0) {

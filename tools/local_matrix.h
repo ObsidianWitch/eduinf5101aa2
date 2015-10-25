@@ -1,7 +1,7 @@
 #ifndef MATRIX
 #define MATRIX
 
-struct LocalMatrix {
+typedef struct LocalMatrix {
     double* beforeLine;
     double** matrix;
     double* afterLine;
@@ -9,28 +9,28 @@ struct LocalMatrix {
     int innerLines;
     int totalLines;
     int cols;
-};
+} LocalMatrix;
 
-struct LocalMatrix createLocalMatrix(int nprocs, int nmatrix);
-void destructLocalMatrix(struct LocalMatrix* matrix);
+LocalMatrix createLocalMatrix(int nprocs, int nmatrix);
+void destructLocalMatrix(LocalMatrix* matrix);
 
-void localInitialization(struct LocalMatrix* matrix, int nprocs, int rank);
-void remoteInitialization(struct LocalMatrix* matrix, int nprocs, int rank);
+void localInitialization(LocalMatrix* matrix, int nprocs, int rank);
+void remoteInitialization(LocalMatrix* matrix, int nprocs, int rank);
 
-double get(struct LocalMatrix* matrix, int x, int y);
-void set(struct LocalMatrix* matrix, int x, int y, double value);
+double get(LocalMatrix* matrix, int x, int y);
+void set(LocalMatrix* matrix, int x, int y, double value);
 
-void fillInner(struct LocalMatrix* matrix, double value);
-void fillBeforeLine(struct LocalMatrix* matrix, double value);
-void fillAfterLine(struct LocalMatrix* matrix, double value);
+void fillInner(LocalMatrix* matrix, double value);
+void fillBeforeLine(LocalMatrix* matrix, double value);
+void fillAfterLine(LocalMatrix* matrix, double value);
 
-void sendLastToBeforeLine(struct LocalMatrix* matrix, int currentRank);
-void sendFirstToAfterLine(struct LocalMatrix* matrix, int currentRank);
-void recvAfterFromFirstLine(struct LocalMatrix* matrix, int currentRank);
-void recvBeforeFromLastLine(struct LocalMatrix* matrix, int currentRank);
+void sendLastToBeforeLine(LocalMatrix* matrix, int currentRank);
+void sendFirstToAfterLine(LocalMatrix* matrix, int currentRank);
+void recvAfterFromFirstLine(LocalMatrix* matrix, int currentRank);
+void recvBeforeFromLastLine(LocalMatrix* matrix, int currentRank);
 
-void display(struct LocalMatrix* matrix);
-void writeMatrix(struct LocalMatrix* matrix, char* fileName);
-void WriteFullMatrix(struct LocalMatrix* matrix, int nprocs, int rank);
+void display(LocalMatrix* matrix);
+void writeMatrix(LocalMatrix* matrix, char* fileName);
+void WriteFullMatrix(LocalMatrix* matrix, int nprocs, int rank);
 
 #endif // MATRIX
