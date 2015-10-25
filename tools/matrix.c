@@ -3,6 +3,9 @@
 #include "matrix.h"
 #include "mpi.h"
 
+const int BEFORE_TAG = 0;
+const int AFTER_TAG = 1;
+
 /**
  * Allocates a 2D array.
  * @param lines
@@ -115,66 +118,57 @@ void fillInner(
 }
 
 /**
- * Sends a line to another process using MPI.
- * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
- * one line before, and one line after.
- * @param nprocs Number of processes currently running this program.
- * @param nmatrix Size of the matrix resulting from the combination of the
- * local matrices on all the processes.
- * @param x Index of the line to send.
- * @param rank Rank of the receiver.
- * @param tag Mesasge tag.
+ * Sends the last line from the current process' inner matrix to the beforeLine
+ * of the next process
  */
-void sendLine(
-    struct LocalMatrix* matrix, int nprocs, int nmatrix,
-    int x, int rank, int tag
+void sendLastToBeforeLine(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix, int currentRank
 ) {
-    int lines = nmatrix/nprocs + 2;
-    double* line = NULL;
+    int i = nmatrix/nprocs - 1;
     
-    if (x == 0) {
-        line = matrix->beforeLine;
-    }
-    else if (x == lines - 1) {
-        line = matrix->afterLine;
-    }
-    else {
-        line = matrix->matrix[x];
-    }
-    
-    MPI_Send(line, nmatrix, MPI_DOUBLE, rank, tag, MPI_COMM_WORLD);
+    MPI_Send(
+        matrix->matrix[i], nmatrix, MPI_DOUBLE,
+        currentRank + 1, BEFORE_TAG, MPI_COMM_WORLD
+    );
 }
 
 /**
- * Receives a lines from another process using MPI.
- * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
- * one line before, and one line after.
- * @param nprocs Number of processes currently running this program.
- * @param nmatrix Size of the matrix resulting from the combination of the
- * local matrices on all the processes.
- * @param x Index of the line to fill with the incoming data.
- * @param rank Rank of the source.
- * @param tag Mesasge tag.
+ * Sends the first line from the current process' inner matrix to the afterLine
+ * of the previous process
  */
-void receiveLine(
-    struct LocalMatrix* matrix, int nprocs, int nmatrix,
-    int x, int rank, int tag
+void sendFirstToAfterLine(
+    struct LocalMatrix* matrix, int nmatrix, int currentRank
 ) {
-    int lines = nmatrix/nprocs + 2;
-    double* line = NULL;
-    
-    if (x == 0) {
-        line = matrix->beforeLine;
-    }
-    else if (x == lines - 1) {
-        line = matrix->afterLine;
-    }
-    else {
-        line = matrix->matrix[x];
-    }
-    
+    MPI_Send(
+        matrix->matrix[0], nmatrix, MPI_DOUBLE,
+        currentRank - 1, AFTER_TAG, MPI_COMM_WORLD
+    );
+}
+
+/**
+ * Receives the first line from the next process inner matrix and stores it in
+ * the LocalMatrix's afterLine.
+ */
+void recvAfterFromFirstLine(
+    struct LocalMatrix* matrix, int nmatrix, int currentRank
+) {
     MPI_Recv(
-        line, nmatrix, MPI_DOUBLE, rank, tag,
+        matrix->afterLine, nmatrix, MPI_DOUBLE,
+        currentRank + 1, AFTER_TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE
+    );
+}
+
+/**
+ * Receives the last line from the previous process inner matrix and stores it
+ * in the LocalMatrix's beforeLine.
+ */
+void recvBeforeFromLastLine(
+    struct LocalMatrix* matrix, int nmatrix, int currentRank
+) {
+    MPI_Recv(
+        matrix->beforeLine, nmatrix, MPI_DOUBLE,
+        currentRank - 1, BEFORE_TAG,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
 }

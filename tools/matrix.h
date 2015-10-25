@@ -19,13 +19,17 @@ void set(
 void fillInner(
     struct LocalMatrix* matrix, int nprocs, int nmatrix, double value
 );
-void sendLine(
-    struct LocalMatrix* matrix, int nprocs, int nmatrix,
-    int x, int rank, int tag
+void sendLastToBeforeLine(
+    struct LocalMatrix* matrix, int nprocs, int nmatrix, int currentRank
 );
-void receiveLine(
-    struct LocalMatrix* matrix, int nprocs, int nmatrix,
-    int x, int rank, int tag
+void sendFirstToAfterLine(
+    struct LocalMatrix* matrix, int nmatrix, int currentRank
+);
+void recvAfterFromFirstLine(
+    struct LocalMatrix* matrix, int nmatrix, int currentRank
+);
+void recvBeforeFromLastLine(
+    struct LocalMatrix* matrix, int nmatrix, int currentRank
 );
 void display(struct LocalMatrix* matrix, int nprocs, int nmatrix);
 
