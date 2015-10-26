@@ -1,2 +1,9 @@
 *.irlog
 *.out
+
+*.pdf
+*.aux
+*.toc
+*.log
+*.toc
+
