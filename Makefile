@@ -1,5 +1,6 @@
 SHELL = /bin/bash
-FLAGS = -Wall -Wextra -std=gnu99 -lm
+FLAGS = -Wall -Wextra -std=gnu99
+LINKS = -lm
 NODE = `echo gemini{1..12} | sed 's/ /,/g'`
 TASKS = 4
 INCLUDES = tools/array2D.h tools/array2D.c \
@@ -14,7 +15,7 @@ grid: grid.c
 	mpirun -host ${NODE} -np ${TASKS} ./grid.out
 
 laplace: laplace.c
-	mpicc ${FLAGS} -o laplace.out ${INCLUDES} $<
+	mpicc ${FLAGS} -o laplace.out ${INCLUDES} $< ${LINKS}
 	mpirun -host ${NODE} -np ${TASKS} ./laplace.out
 
 clean:
