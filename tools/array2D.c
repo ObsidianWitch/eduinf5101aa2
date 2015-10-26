@@ -1,10 +1,9 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "array2D.h"
 
 /**
  * Allocates a 2D array.
- * @param lines
- * @param cols
  */
 double** malloc2D(int lines, int cols) {
     double*  arrayBlock = malloc(lines * cols * sizeof(double));
@@ -19,9 +18,20 @@ double** malloc2D(int lines, int cols) {
 
 /**
  * Frees a 2D array.
- * @param array
  */
 void free2D(double** array) {
 	free(array[0]);
 	free(array);
+}
+
+/**
+ * Prints a 2D array.
+ */
+void print2D(double** array, int lines, int cols) {
+    for (int i = 0 ; i < lines ; i++) {
+        for (int j = 0 ; j < cols ; j++) {
+            printf("%6.3f ", array[i][j]);
+        }
+        printf("\n");
+    }
 }
