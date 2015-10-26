@@ -96,4 +96,21 @@ leur numéro de tâche. Lorsque tous les calculs sont terminés, nous utilisons 
 fonction \hl{MPI\_Reduce()} qui est ici configurée pour calculer la somme de
 toutes les valeurs obtenues par chaque processeur.
 
+\section{Structure de données en parallèle}
+
+Dans l'exécution d'algorithme avec des matrices, nous avons tendance à diviser
+les données entre les processeurs qui participent à la parallélisation.
+Cependant, il arrive que les processeurs aient besoin de données possédées par
+les autres processeurs. C'est pourquoi, nous faisons du recouvrement de données
+qui permet aux processeurs d'avoir les données nécessaires pour faire les
+opérations de l'algorithme à implémenter. \\
+
+Dans cet exercice, nous divisions une matrice en matrices de même taille pour
+les processeurs. Une fois que cela est fait, deux lignes sont ajoutées autour
+de cette matrice et représentent la dernière ligne du processeur de numéro
+précédent dans le classement des tâches et la première ligne du processeur de
+numéro suivant. C'est le recouvrement de données.
+
+%TODO explains how mpi is used here
+
 \end{document}
