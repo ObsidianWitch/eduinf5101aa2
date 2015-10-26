@@ -79,6 +79,21 @@
 
 %TODO
 
-\section{}
+\section{Calcul de $\pi$}
+
+Dans cet exercice, l'objectif est de calculer une valeur la plus proche de
+$\pi$. Cette valeur peut s'obtenir avec un calcul d'intégrale. Par conséquent,
+pour atteindre la plus grande précision, il faudra effectuer les calculs avec
+des très petits pas entre les bornes de l'intervalle. En procédant de cette
+façon, le calcul de la valeur de $\pi$ demandera beaucoup de temps. A l'aide de
+la bibliothèque MPI, nous pouvons paralléliser ces calculs sur un nombre de
+processeurs que nous choisissons. Il est ainsi possible d'accélérer le calcul
+de $\pi$. \\
+
+Pour implémenter cette théorie, nous avons fait en sorte que chaque processeur
+qui exécute le programme se détermine des bornes d'intervale en fonction de
+leur numéro de tâche. Lorsque tous les calculs sont terminés, nous utilisons la
+fonction \hl{MPI\_Reduce()} qui est ici configurée pour calculer la somme de
+toutes les valeurs obtenues par chaque processeur.
 
 \end{document}
