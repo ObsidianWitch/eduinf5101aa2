@@ -25,12 +25,11 @@ void fillInnerLine(LocalMatrix* matrix, int i, double value);
 void fillBeforeLine(LocalMatrix* matrix, double value);
 void fillAfterLine(LocalMatrix* matrix, double value);
 
-void sendLastToBeforeLine(LocalMatrix* matrix, int currentRank);
-void sendFirstToAfterLine(LocalMatrix* matrix, int currentRank);
-void recvAfterFromFirstLine(LocalMatrix* matrix, int currentRank);
-void recvBeforeFromLastLine(LocalMatrix* matrix, int currentRank);
+void sendLastToBeforeLine(LocalMatrix* matrix, int rank);
+void sendFirstToAfterLine(LocalMatrix* matrix, int rank);
+void recvAfterFromFirstLine(LocalMatrix* matrix, int rank);
+void recvBeforeFromLastLine(LocalMatrix* matrix, int rank);
 
-void display(LocalMatrix* matrix);
 void writeMatrix(LocalMatrix* matrix, char* fileName);
 void WriteFullMatrix(LocalMatrix* matrix, int nprocs, int rank);
 

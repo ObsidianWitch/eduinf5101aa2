@@ -148,12 +148,12 @@ void fillAfterLine(LocalMatrix* matrix, double value) {
  * Sends the last line from the current process' inner matrix to the beforeLine
  * of the next process
  */
-void sendLastToBeforeLine(LocalMatrix* matrix, int currentRank) {
+void sendLastToBeforeLine(LocalMatrix* matrix, int rank) {
     int i = matrix->innerLines - 1;
     
     MPI_Send(
         matrix->matrix[i], matrix->cols, MPI_DOUBLE,
-        currentRank + 1, BEFORE_TAG, MPI_COMM_WORLD
+        rank + 1, BEFORE_TAG, MPI_COMM_WORLD
     );
 }
 
@@ -161,10 +161,10 @@ void sendLastToBeforeLine(LocalMatrix* matrix, int currentRank) {
  * Sends the first line from the current process' inner matrix to the afterLine
  * of the previous process
  */
-void sendFirstToAfterLine(LocalMatrix* matrix, int currentRank) {
+void sendFirstToAfterLine(LocalMatrix* matrix, int rank) {
     MPI_Send(
         matrix->matrix[0], matrix->cols, MPI_DOUBLE,
-        currentRank - 1, AFTER_TAG, MPI_COMM_WORLD
+        rank - 1, AFTER_TAG, MPI_COMM_WORLD
     );
 }
 
@@ -172,10 +172,10 @@ void sendFirstToAfterLine(LocalMatrix* matrix, int currentRank) {
  * Receives the first line from the next process inner matrix and stores it in
  * the LocalMatrix's afterLine.
  */
-void recvAfterFromFirstLine(LocalMatrix* matrix, int currentRank) {
+void recvAfterFromFirstLine(LocalMatrix* matrix, int rank) {
     MPI_Recv(
         matrix->afterLine, matrix->cols, MPI_DOUBLE,
-        currentRank + 1, AFTER_TAG,
+        rank + 1, AFTER_TAG,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
 }
@@ -184,25 +184,12 @@ void recvAfterFromFirstLine(LocalMatrix* matrix, int currentRank) {
  * Receives the last line from the previous process inner matrix and stores it
  * in the LocalMatrix's beforeLine.
  */
-void recvBeforeFromLastLine(LocalMatrix* matrix, int currentRank) {
+void recvBeforeFromLastLine(LocalMatrix* matrix, int rank) {
     MPI_Recv(
         matrix->beforeLine, matrix->cols, MPI_DOUBLE,
-        currentRank - 1, BEFORE_TAG,
+        rank - 1, BEFORE_TAG,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
-}
-
-/**
- * Displays the specified LocalMatrix.
- */
-void displayMatrix(LocalMatrix* matrix) {
-    for (int i = 0 ; i < matrix->totalLines ; i++) {
-        for (int j = 0 ; j < matrix->cols ; j++) {
-            double value = get(matrix, i, j);
-            printf("%2.0f ", value);
-        }
-        printf("\n");
-    }
 }
 
 /**
@@ -215,7 +202,7 @@ void writeMatrix(LocalMatrix* matrix, char* fileName) {
     for (int i = 0 ; i < matrix->totalLines ; i++) {
         for (int j = 0 ; j < matrix->cols ; j++) {
             double value = get(matrix, i, j);
-            fprintf(f, "%2.0f ", value);
+            fprintf(f, "%6.3f ", value);
         }
         fprintf(f, "\n");
     }
