@@ -4,7 +4,7 @@
 /**
  * Retrieves current rank position in a 2D space.
  */
-Rank2D rank2D(int nprocs, int rank) {
+Rank2D createRank2D(int nprocs, int rank) {
     Rank2D rank2D = {
         .rank = rank,
         .i    = rank / (int) sqrt(nprocs),

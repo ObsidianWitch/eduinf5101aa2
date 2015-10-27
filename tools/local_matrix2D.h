@@ -15,11 +15,11 @@ typedef struct LocalMatrix {
     int totalSize;
 } LocalMatrix;
 
-LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rnk2D);
+LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rank2D);
 void destructLocalMatrix(LocalMatrix* matrix);
 
 void localInitialization(
-    LocalMatrix* matrix, int nprocs, int nmatrix, Rank2D rnk2D
+    LocalMatrix* matrix, int nprocs, int nmatrix, Rank2D rank2D
 );
 
 bool corner(LocalMatrix* matrix, int i, int j);
@@ -30,7 +30,7 @@ void writeMatrixLine(
     LocalMatrix* matrix, char* fileName, int i, bool boundaries, bool endline
 );
 void writeFullMatrix(
-    LocalMatrix* matrix, int nprocs, Rank2D rnk2D, bool boundaries
+    LocalMatrix* matrix, int nprocs, Rank2D rank2D, bool boundaries
 );
 
 #endif // MATRIX2D

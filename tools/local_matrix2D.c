@@ -11,7 +11,7 @@ const int DISPLAY_TAG = 4;
 /**
  * Creates and initializes a LocalMatrix.
  */
-LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rnk2D) {
+LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rank2D) {
     int innerSize = nmatrix/sqrt(nprocs);
     int totalSize = innerSize + 2;
     
@@ -25,7 +25,7 @@ LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rnk2D) {
     localMatrix.innerSize = innerSize;
     localMatrix.totalSize = totalSize;
     
-    localInitialization(&localMatrix, nprocs, nmatrix, rnk2D);
+    localInitialization(&localMatrix, nprocs, nmatrix, rank2D);
     
     return localMatrix;
 }
@@ -45,7 +45,7 @@ void destructLocalMatrix(LocalMatrix* matrix) {
  * Initializes localMatrix.
  */
 void localInitialization(
-    LocalMatrix* matrix, int nprocs, int nmatrix, Rank2D rnk2D
+    LocalMatrix* matrix, int nprocs, int nmatrix, Rank2D rank2D
 ) {
     int lastElement = matrix->innerSize - 1;
     
@@ -53,23 +53,23 @@ void localInitialization(
     // whether the results are correct
     for (int i = 0 ; i < matrix->innerSize ; i++) {
         int value = i / (nmatrix / nprocs);
-        value += rnk2D.i * sqrt(nprocs);
+        value += rank2D.i * sqrt(nprocs);
         fillSeq(matrix->matrix[i], matrix->innerSize, value);
     }
     
-    if (rnk2D.i == 0) {
+    if (rank2D.i == 0) {
         fillSeq(matrix->matrix[0], matrix->innerSize, -1);
         fillSeq(matrix->beforeLine, matrix->innerSize, -2);
     }
-    else if (rnk2D.i == (int) sqrt(nprocs) - 1) {
+    else if (rank2D.i == (int) sqrt(nprocs) - 1) {
         fillSeq(matrix->matrix[lastElement], matrix->innerSize, -1);
         fillSeq(matrix->afterLine, matrix->innerSize, -2);
     }
     
-    if (rnk2D.j == 0) {
+    if (rank2D.j == 0) {
         fillSeq(matrix->beforeCol, matrix->innerSize, -2);
     }
-    else if (rnk2D.j == (int) sqrt(nprocs) - 1) {
+    else if (rank2D.j == (int) sqrt(nprocs) - 1) {
         fillSeq(matrix->afterCol, matrix->innerSize, -2);
     }
 }
@@ -177,17 +177,17 @@ void writeMatrixLine(
  * same steps for P2 & P3
  */
 void writeFullMatrix(
-    LocalMatrix* matrix, int nprocs, Rank2D rnk2D, bool boundaries
+    LocalMatrix* matrix, int nprocs, Rank2D rank2D, bool boundaries
 ) {
-    bool start = (rnk2D.rank == 0);
+    bool start = (rank2D.rank == 0);
     if (start) { remove("matrix.out"); }
     
     int nprocsRow = sqrt(nprocs);
-    bool lastProcInRow = (rnk2D.j == nprocsRow - 1);
-    bool lastProc = (rnk2D.rank == nprocs - 1);
+    bool lastProcInRow = (rank2D.j == nprocsRow - 1);
+    bool lastProc = (rank2D.rank == nprocs - 1);
     
-    int nextRank = rnk2D.rank + 1;
-    if (lastProcInRow) { nextRank = nprocsRow * rnk2D.i; }
+    int nextRank = rank2D.rank + 1;
+    if (lastProcInRow) { nextRank = nprocsRow * rank2D.i; }
     
     int iStart = 0;
     int iEnd = matrix->totalSize;
@@ -209,7 +209,7 @@ void writeFullMatrix(
     }
     
     if (lastProcInRow && !lastProc) {
-        int rankNextRow = nprocsRow * (rnk2D.i + 1);
+        int rankNextRow = nprocsRow * (rank2D.i + 1);
         MPI_Send(NULL, 0, MPI_INT, rankNextRow, DISPLAY_TAG, MPI_COMM_WORLD);
     }
 }

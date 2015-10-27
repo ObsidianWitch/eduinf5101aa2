@@ -7,7 +7,7 @@ typedef struct Rank2D {
     int j;
 } Rank2D;
 
-Rank2D rank2D(int nprocs, int rank);
+Rank2D createRank2D(int nprocs, int rank);
 int up(int nprocs, int rank);
 int down(int nprocs, int rank);
 int left(int rank);

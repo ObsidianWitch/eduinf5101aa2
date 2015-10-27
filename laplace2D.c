@@ -13,12 +13,12 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     
-    Rank2D rnk2D = rank2D(nprocs, rank);
-    LocalMatrix localMatrix = createLocalMatrix(nprocs, N_MATRIX, rnk2D);
+    Rank2D rank2D = createRank2D(nprocs, rank);
+    LocalMatrix localMatrix = createLocalMatrix(nprocs, N_MATRIX, rank2D);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    writeFullMatrix(&localMatrix, nprocs, rnk2D, false);
+    writeFullMatrix(&localMatrix, nprocs, rank2D, false);
 
     destructLocalMatrix(&localMatrix);
 
