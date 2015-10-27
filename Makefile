@@ -21,5 +21,10 @@ laplace: laplace.c
 seq_laplace: seq_laplace.c
 	gcc ${FLAGS} -o seq_laplace.out tools/array2D.c $< ${LINKS}
 
+laplace2D: laplace2D.c
+	mpicc ${FLAGS} -o laplace2D.out tools/array2D.c tools/local_matrix2D.c \
+		tools/rank2D.c $< ${LINKS}
+	mpirun -host ${NODE} -np ${TASKS} ./laplace2D.out
+
 clean:
 	rm -f *.out
