@@ -193,20 +193,25 @@ void recvBeforeFromLastLine(LocalMatrix* matrix, int rank) {
 }
 
 /**
- * Writes the specified LocalMatrix to a file.
+ * Writes the specified LocalMatrix to a file. Boundaries can be written by
+ * setting the associated parameter to true.
  */
-void writeMatrix(LocalMatrix* matrix, char* fileName) {
+void writeMatrix(LocalMatrix* matrix, char* fileName, bool boundaries) {
     FILE* f = fopen(fileName, "a");
     if (f == NULL) { perror("fopen"); }
     
-    for (int i = 0 ; i < matrix->totalLines ; i++) {
+    int iStart = 0;
+    int iEnd = matrix->totalLines;
+    
+    if (!boundaries) { iStart++; iEnd--; }
+    
+    for (int i = iStart ; i < iEnd ; i++) {
         for (int j = 0 ; j < matrix->cols ; j++) {
             double value = get(matrix, i, j);
             fprintf(f, "%6.3f ", value);
         }
         fprintf(f, "\n");
     }
-    fprintf(f, "\n");
     
     fclose(f);
 }
@@ -214,8 +219,9 @@ void writeMatrix(LocalMatrix* matrix, char* fileName) {
 /**
  * Writes the full matrix by telling each process to write its LocalMatrix in
  * a file. The processes write in the correct order by using a token ring.
+ * Boundaries can be written by setting the associated parameter to true.
  */
-void WriteFullMatrix(LocalMatrix* matrix, int nprocs, int rank) {
+void writeFullMatrix(LocalMatrix* matrix, int nprocs, int rank, bool boundaries) {
     if (rank == 0) { remove("matrix.out"); }
     
     if (rank != 0) {
@@ -226,7 +232,7 @@ void WriteFullMatrix(LocalMatrix* matrix, int nprocs, int rank) {
         );
     }
     
-    writeMatrix(matrix, "matrix.out");
+    writeMatrix(matrix, "matrix.out", boundaries);
     
     if (rank != nprocs - 1) {
         int tmp = 0;

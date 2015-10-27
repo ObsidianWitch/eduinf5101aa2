@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
 
     computeLaplaceEquation(&localMatrix, nprocs, rank);
 
-    WriteFullMatrix(&localMatrix, nprocs, rank);
+    writeFullMatrix(&localMatrix, nprocs, rank, false);
 
     destructLocalMatrix(&localMatrix);
 

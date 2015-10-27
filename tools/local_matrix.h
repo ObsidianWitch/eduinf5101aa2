@@ -1,6 +1,8 @@
 #ifndef MATRIX
 #define MATRIX
 
+#include <stdbool.h>
+
 typedef struct LocalMatrix {
     double* beforeLine;
     double** matrix;
@@ -30,7 +32,7 @@ void sendFirstToAfterLine(LocalMatrix* matrix, int rank);
 void recvAfterFromFirstLine(LocalMatrix* matrix, int rank);
 void recvBeforeFromLastLine(LocalMatrix* matrix, int rank);
 
-void writeMatrix(LocalMatrix* matrix, char* fileName);
-void WriteFullMatrix(LocalMatrix* matrix, int nprocs, int rank);
+void writeMatrix(LocalMatrix* matrix, char* fileName, bool boundaries);
+void writeFullMatrix(LocalMatrix* matrix, int nprocs, int rank, bool boundaries);
 
 #endif // MATRIX
