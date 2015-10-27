@@ -47,15 +47,17 @@ void destructLocalMatrix(LocalMatrix* matrix) {
  * all processes: initializes inner matrix with rank
  */
 void localInitialization(LocalMatrix* matrix, int nprocs, int rank) {
-    fillInner(matrix, rank);
+    fill2D(matrix->matrix, matrix->innerLines, matrix->cols, rank);
     
     if (rank == 0) {
-        fillInnerLine(matrix, 0, -1);
-        fillBeforeLine(matrix, -2);
+        fillSeq(matrix->matrix[0], matrix->cols, -1);
+        fillSeq(matrix->beforeLine, matrix->cols, -2);
     }
     else if (rank == nprocs - 1) {
-        fillInnerLine(matrix, matrix->innerLines - 1, -1);
-        fillAfterLine(matrix, -2);
+        int lastLine = matrix->innerLines - 1;
+        
+        fillSeq(matrix->matrix[lastLine], matrix->cols, -1);
+        fillSeq(matrix->afterLine, matrix->cols, -2);
     }
 }
 
@@ -102,45 +104,6 @@ void set(LocalMatrix* matrix, int i, int j, double value) {
     }
     else {
         matrix->matrix[i - 1][j] = value;
-    }
-}
-
-/**
- * Fills the matrix contained in the specified LocalMatrix instance. Do not
- * modify the values inside beforeLine and afterLine.
- */
-void fillInner(LocalMatrix* matrix, double value) {
-    for (int i = 0 ; i < matrix->innerLines ; i++) {
-        for (int j = 0 ; j < matrix->cols ; j++) {
-            matrix->matrix[i][j] = value;
-        }
-    }
-}
-
-/**
- * Fills line with value.
- */
-void fillInnerLine(LocalMatrix* matrix, int i, double value) {
-    for (int j = 0 ; j < matrix->cols ; j++) {
-        matrix->matrix[i][j] = value;
-    }
-}
-
-/**
- * Fills beforeLine with value.
- */
-void fillBeforeLine(LocalMatrix* matrix, double value) {
-    for (int j = 0 ; j < matrix->cols ; j++) {
-        matrix->beforeLine[j] = value;
-    }
-}
-
-/**
- * Fills afterLine with value.
- */
-void fillAfterLine(LocalMatrix* matrix, double value) {
-    for (int j = 0 ; j < matrix->cols ; j++) {
-        matrix->afterLine[j] = value;
     }
 }
 
