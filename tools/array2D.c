@@ -35,3 +35,32 @@ void print2D(double** array, int lines, int cols) {
         printf("\n");
     }
 }
+
+/**
+ * Fills a 2D array with value.
+ */
+void fill2D(double** array, int lines, int cols, double value) {
+    for (int i = 0 ; i < lines ; i++) {
+        for (int j = 0 ; j < cols ; j++) {
+            array[i][j] = value;
+        }
+    }
+}
+
+/**
+ * Sequentially fills a 1D array with a value (e.g. fill a line).
+ */
+void fillSeq(double* array, int size, double value) {
+    for (int k = 0 ; k < size ; k++) {
+        array[k] = value;
+    }
+}
+
+/**
+ * Fills a 2D array's column.
+ */
+void fillCol(double** array, int lines, int j, double value) {
+    for (int i = 0 ; i < lines ; i++) {
+        array[i][j] = value;
+    }
+}
