@@ -18,5 +18,8 @@ laplace: laplace.c
 	mpicc ${FLAGS} -o laplace.out ${INCLUDES} $< ${LINKS}
 	mpirun -host ${NODE} -np ${TASKS} ./laplace.out
 
+seq_laplace: seq_laplace.c
+	gcc ${FLAGS} -o seq_laplace.out tools/array2D.c $< ${LINKS}
+
 clean:
 	rm -f *.out
