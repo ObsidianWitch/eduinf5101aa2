@@ -9,7 +9,10 @@ const int BEFORE_TAG = 0;
 const int AFTER_TAG = 1;
 const int DISPLAY_TAG = 2;
 
-LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
+/**
+ * Creates and initializes a LocalMatrix.
+ */
+LocalMatrix createLocalMatrix(int nprocs, int nmatrix, int rank) {
     int lines = nmatrix/nprocs;
     int cols = nmatrix;
     
@@ -22,9 +25,15 @@ LocalMatrix createLocalMatrix(int nprocs, int nmatrix) {
     localMatrix.totalLines = lines + 2;
     localMatrix.cols = cols;
     
+    localInitialization(&localMatrix, nprocs, rank);
+    updateBoundaries(&localMatrix, nprocs, rank);
+    
     return localMatrix;
 }
 
+/**
+ * Frees allocated memory for a LocalMatrix.
+ */
 void destructLocalMatrix(LocalMatrix* matrix) {
     free(matrix->beforeLine);
     free(matrix->afterLine);
@@ -39,19 +48,22 @@ void destructLocalMatrix(LocalMatrix* matrix) {
  */
 void localInitialization(LocalMatrix* matrix, int nprocs, int rank) {
     fillInner(matrix, rank);
+    
     if (rank == 0) {
-        fillBeforeLine(matrix, -1);
+        fillInnerLine(matrix, 0, -1);
+        fillBeforeLine(matrix, -2);
     }
     else if (rank == nprocs - 1) {
-        fillAfterLine(matrix, -1);
+        fillInnerLine(matrix, matrix->innerLines - 1, -1);
+        fillAfterLine(matrix, -2);
     }
 }
 
 /**
- * Initializes localMatrix's afterLine & beforeLine by sending and receiving
+ * Updates localMatrix's afterLine & beforeLine by sending and receiving
  * data from other processes using MPI.
  */
-void remoteInitialization(LocalMatrix* matrix, int nprocs, int rank) {
+void updateBoundaries(LocalMatrix* matrix, int nprocs, int rank) {
     if (rank > 0) {
         sendFirstToAfterLine(matrix, rank);
         recvBeforeFromLastLine(matrix, rank);
@@ -64,56 +76,53 @@ void remoteInitialization(LocalMatrix* matrix, int nprocs, int rank) {
 }
 
 /**
- * Retrieves the (x,y) element inside the specified matrix.
- * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
- * one line before, and one line after.
- * @param x
- * @param y
+ * Retrieves the (i,j) element inside the specified matrix.
  */
-double get(LocalMatrix* matrix, int x, int y) {
-    if (x == 0) {
-        return matrix->beforeLine[y];
+double get(LocalMatrix* matrix, int i, int j) {
+    if (i == 0) {
+        return matrix->beforeLine[j];
     }
-    else if (x == matrix->totalLines - 1) {
-        return matrix->afterLine[y];
+    else if (i == matrix->totalLines - 1) {
+        return matrix->afterLine[j];
     }
     else {
-        return matrix->matrix[x - 1][y];
+        return matrix->matrix[i - 1][j];
     }
 }
 
 /**
- * Sets a value to the (x,y) element inside the specified matrix.
- * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
- * one line before, and one line after.
- * @param x
- * @param y
- * @param value
+ * Sets a value to the (i,j) element inside the specified matrix.
  */
-void set(LocalMatrix* matrix, int x, int y, double value) {
-    if (x == 0) {
-        matrix->beforeLine[y] = value;
+void set(LocalMatrix* matrix, int i, int j, double value) {
+    if (i == 0) {
+        matrix->beforeLine[j] = value;
     }
-    else if (x == matrix->totalLines - 1) {
-        matrix->afterLine[y] = value;
+    else if (i == matrix->totalLines - 1) {
+        matrix->afterLine[j] = value;
     }
     else {
-        matrix->matrix[x - 1][y] = value;
+        matrix->matrix[i - 1][j] = value;
     }
 }
 
 /**
  * Fills the matrix contained in the specified LocalMatrix instance. Do not
  * modify the values inside beforeLine and afterLine.
- * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
- * one line before, and one line after.
- * @param value
  */
 void fillInner(LocalMatrix* matrix, double value) {
     for (int i = 0 ; i < matrix->innerLines ; i++) {
         for (int j = 0 ; j < matrix->cols ; j++) {
             matrix->matrix[i][j] = value;
         }
+    }
+}
+
+/**
+ * Fills line with value.
+ */
+void fillInnerLine(LocalMatrix* matrix, int i, double value) {
+    for (int j = 0 ; j < matrix->cols ; j++) {
+        matrix->matrix[i][j] = value;
     }
 }
 
@@ -185,8 +194,6 @@ void recvBeforeFromLastLine(LocalMatrix* matrix, int currentRank) {
 
 /**
  * Displays the specified LocalMatrix.
- * @param matrix Instance of the LocalMatrix struct containing an inner matrix,
- * one line before, and one line after.
  */
 void displayMatrix(LocalMatrix* matrix) {
     for (int i = 0 ; i < matrix->totalLines ; i++) {
