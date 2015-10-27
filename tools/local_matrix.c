@@ -161,7 +161,10 @@ void recvBeforeFromLastLine(LocalMatrix* matrix, int rank) {
  */
 void writeMatrix(LocalMatrix* matrix, char* fileName, bool boundaries) {
     FILE* f = fopen(fileName, "a");
-    if (f == NULL) { perror("fopen"); }
+    if (f == NULL) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
     
     int iStart = 0;
     int iEnd = matrix->totalLines;
@@ -184,13 +187,14 @@ void writeMatrix(LocalMatrix* matrix, char* fileName, bool boundaries) {
  * a file. The processes write in the correct order by using a token ring.
  * Boundaries can be written by setting the associated parameter to true.
  */
-void writeFullMatrix(LocalMatrix* matrix, int nprocs, int rank, bool boundaries) {
+void writeFullMatrix(
+    LocalMatrix* matrix, int nprocs, int rank, bool boundaries
+) {
     if (rank == 0) { remove("matrix.out"); }
     
     if (rank != 0) {
-        int tmp = 0;
         MPI_Recv(
-            &tmp, 1, MPI_INT, rank - 1, DISPLAY_TAG,
+            NULL, 0, MPI_INT, rank - 1, DISPLAY_TAG,
             MPI_COMM_WORLD, MPI_STATUS_IGNORE
         );
     }
@@ -198,7 +202,6 @@ void writeFullMatrix(LocalMatrix* matrix, int nprocs, int rank, bool boundaries)
     writeMatrix(matrix, "matrix.out", boundaries);
     
     if (rank != nprocs - 1) {
-        int tmp = 0;
-        MPI_Send(&tmp, 1, MPI_INT, rank + 1, DISPLAY_TAG, MPI_COMM_WORLD);
+        MPI_Send(NULL, 0, MPI_INT, rank + 1, DISPLAY_TAG, MPI_COMM_WORLD);
     }
 }

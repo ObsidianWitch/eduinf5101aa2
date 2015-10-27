@@ -28,6 +28,8 @@ void recvAfterFromFirstLine(LocalMatrix* matrix, int rank);
 void recvBeforeFromLastLine(LocalMatrix* matrix, int rank);
 
 void writeMatrix(LocalMatrix* matrix, char* fileName, bool boundaries);
-void writeFullMatrix(LocalMatrix* matrix, int nprocs, int rank, bool boundaries);
+void writeFullMatrix(
+    LocalMatrix* matrix, int nprocs, int rank, bool boundaries
+);
 
 #endif // MATRIX
