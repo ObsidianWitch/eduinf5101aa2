@@ -100,17 +100,27 @@ toutes les valeurs obtenues par chaque processeur.
 
 Dans l'exécution d'algorithme avec des matrices, nous avons tendance à diviser
 les données entre les processeurs qui participent à la parallélisation.
-Cependant, il arrive que les processeurs aient besoin de données possédées par
-les autres processeurs. C'est pourquoi, nous faisons du recouvrement de données
-qui permet aux processeurs d'avoir les données nécessaires pour faire les
-opérations de l'algorithme à implémenter. \\
+Cependant, il arrive que les processeurs aient besoin de données voisines dans
+la matrice possédées par les autres processeurs. C'est pourquoi, nous faisons
+du recouvrement de données qui permet aux processeurs d'avoir les données
+nécessaires pour faire les opérations de l'algorithme à implémenter. \\
 
 Dans cet exercice, nous divisions une matrice en matrices de même taille pour
 les processeurs. Une fois que cela est fait, deux lignes sont ajoutées autour
 de cette matrice et représentent la dernière ligne du processeur de numéro
 précédent dans le classement des tâches et la première ligne du processeur de
-numéro suivant. C'est le recouvrement de données.
+numéro suivant. C'est le recouvrement de données. \\
 
-%TODO explains how mpi is used here
+Pour effectuer le recouvrement, le programme utilise \hl{MPI\_Send()} pour
+envoyer un buffer de données avec un type choisi à un destinataire, puis
+\hl{MPI\_Recv()} pour recevoir les données qui lui sont destinées. \\
+
+%TODO Include listing when fixed
+
+Après un ensemble d'actions parallèles avec ces fonctions, nous pouvons nous
+assurer à ce que les programmes lancés parallèlement se rejoignent en un même
+point dans le déroulement du programme avec la fonction \hl{MPI\_Barrier()}.
+Elle fait attendre les différentes tâches jusqu'à ce que toutes les tâches
+arrivent à cette barrière.
 
 \end{document}
