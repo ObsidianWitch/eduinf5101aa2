@@ -17,27 +17,27 @@ Rank2D createRank2D(int nprocs, int rank) {
 /**
  * Retrives rank of the process handling the submatrix above the current one.
  */
-int up(int nprocs, int rank) {
-    return rank - (int) sqrt(nprocs);
+int upRank(int nprocs2D, int rank) {
+    return rank - nprocs2D;
 }
 
 /**
  * Retrives rank of the process handling the submatrix below the current one.
  */
-int down(int nprocs, int rank) {
-    return rank + (int) sqrt(nprocs);
+int downRank(int nprocs2D, int rank) {
+    return rank + nprocs2D;
 }
 
 /**
  * Retrives rank of the process handling the submatrix left to the current one.
  */
-int left(int rank) {
+int leftRank(int rank) {
     return rank - 1;
 }
 
 /**
  * Retrives rank of the process handling the submatrix right to the current one.
  */
-int right(int rank) {
+int rightRank(int rank) {
     return rank + 1;
 }

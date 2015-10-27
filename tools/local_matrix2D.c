@@ -6,7 +6,15 @@
 #include "local_matrix2D.h"
 #include "array2D.h"
 
+const int BEFORE_TAG = 0;
+const int AFTER_TAG = 1;
+const int LEFT_TAG = 2;
+const int RIGHT_TAG = 2;
 const int DISPLAY_TAG = 4;
+
+MPI_Datatype ColType;
+
+// Initialization & update functions
 
 /**
  * Creates and initializes a LocalMatrix.
@@ -25,7 +33,16 @@ LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rank2D) {
     localMatrix.innerSize = innerSize;
     localMatrix.totalSize = totalSize;
     
+    MPI_Type_vector(
+        localMatrix.innerSize, // number of blocks
+        1,                     // number of elements per block
+        localMatrix.innerSize, // stride
+        MPI_DOUBLE, &ColType
+    );
+    MPI_Type_commit(&ColType);
+    
     localInitialization(&localMatrix, nprocs, nmatrix, rank2D);
+    updateBoundaries(&localMatrix, nprocs, rank2D);
     
     return localMatrix;
 }
@@ -73,6 +90,34 @@ void localInitialization(
         fillSeq(matrix->afterCol, matrix->innerSize, -2);
     }
 }
+
+/**
+ * Updates localMatrix's afterLine, beforeLine, afterCol & beforeCol by sending
+ * and receiving data from other processes using MPI.
+ */
+void updateBoundaries(LocalMatrix* matrix, int nprocs, Rank2D rank2D) {
+    int nprocs2D = sqrt(nprocs);
+    
+    // sends
+    if (rank2D.i > 0) {
+        sendFirstToAfterLine(matrix, nprocs2D, rank2D.rank);
+    }
+    if (rank2D.i < nprocs2D - 1) {
+        sendLastToBeforeLine(matrix, nprocs2D, rank2D.rank);
+    }
+    
+    // receives
+    if (rank2D.i > 0) {
+        recvBeforeFromLastLine(matrix, nprocs2D, rank2D.rank);
+    }
+    if (rank2D.i < nprocs2D - 1) {
+        recvAfterFromFirstLine(matrix, nprocs2D, rank2D.rank);
+    }
+    
+}
+
+
+// Data access functions
 
 /**
  * Checks whether the (i,j) position is a corner.
@@ -132,6 +177,59 @@ void set(LocalMatrix* matrix, int i, int j, double value) {
     }
 }
 
+
+// Communication functions
+
+/**
+ * Sends the last line from the current process' inner matrix to the beforeLine
+ * of the next process
+ */
+void sendLastToBeforeLine(LocalMatrix* matrix, int nprocs2D, int rank) {
+    int lastLine = matrix->innerSize - 1;
+    MPI_Send(
+        matrix->matrix[lastLine], matrix->innerSize, MPI_DOUBLE,
+        downRank(nprocs2D, rank), BEFORE_TAG, MPI_COMM_WORLD
+    );
+}
+
+/**
+ * Sends the first line from the current process' inner matrix to the afterLine
+ * of the previous process
+ */
+void sendFirstToAfterLine(LocalMatrix* matrix, int nprocs2D, int rank) {
+    MPI_Send(
+        matrix->matrix[0], matrix->innerSize, MPI_DOUBLE,
+        upRank(nprocs2D, rank), AFTER_TAG, MPI_COMM_WORLD
+    );
+}
+
+/**
+ * Receives the first line from the next process inner matrix and stores it in
+ * the LocalMatrix's afterLine.
+ */
+void recvAfterFromFirstLine(LocalMatrix* matrix, int nprocs2D, int rank) {
+    MPI_Recv(
+        matrix->afterLine, matrix->innerSize, MPI_DOUBLE,
+        downRank(nprocs2D, rank), AFTER_TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE
+    );
+}
+
+/**
+ * Receives the last line from the previous process inner matrix and stores it
+ * in the LocalMatrix's beforeLine.
+ */
+void recvBeforeFromLastLine(LocalMatrix* matrix, int nprocs2D, int rank) {
+    MPI_Recv(
+        matrix->beforeLine, matrix->innerSize, MPI_DOUBLE,
+        upRank(nprocs2D, rank), BEFORE_TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE
+    );
+}
+
+
+// File writing functions
+
 /**
  * Writes the specified line to a file. Boundaries can be written by setting
  * the associated parameter to true.
@@ -186,7 +284,7 @@ void writeFullMatrix(
     bool lastProcInRow = (rank2D.j == nprocsRow - 1);
     bool lastProc = (rank2D.rank == nprocs - 1);
     
-    int nextRank = rank2D.rank + 1;
+    int nextRank = rightRank(rank2D.rank);
     if (lastProcInRow) { nextRank = nprocsRow * rank2D.i; }
     
     int iStart = 0;

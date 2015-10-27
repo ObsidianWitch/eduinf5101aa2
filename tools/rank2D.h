@@ -8,9 +8,9 @@ typedef struct Rank2D {
 } Rank2D;
 
 Rank2D createRank2D(int nprocs, int rank);
-int up(int nprocs, int rank);
-int down(int nprocs, int rank);
-int left(int rank);
-int right(int rank);
+int upRank(int nprocs2D, int rank);
+int downRank(int nprocs2D, int rank);
+int leftRank(int rank);
+int rightRank(int rank);
 
 #endif // RANK2D
