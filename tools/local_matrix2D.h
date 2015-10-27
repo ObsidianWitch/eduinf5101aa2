@@ -19,6 +19,7 @@ void destructLocalMatrix(LocalMatrix* matrix);
 
 void localInitialization(LocalMatrix* matrix, int nprocs, int nmatrix, int rank);
 
+bool corner(LocalMatrix* matrix, int i, int j);
 double get(LocalMatrix* matrix, int i, int j);
 void set(LocalMatrix* matrix, int i, int j, double value);
 

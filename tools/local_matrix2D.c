@@ -49,6 +49,8 @@ void localInitialization(LocalMatrix* matrix, int nprocs, int nmatrix, int rank)
     Rank2D rnk2D = rank2D(nprocs, rank);
     int lastElement = matrix->innerSize - 1;
     
+    // fill the matrix with the same values as in the 1D case to easily check
+    // whether the results are correct
     for (int i = 0 ; i < matrix->innerSize ; i++) {
         int value = i / (nmatrix / nprocs);
         value += rnk2D.i * sqrt(nprocs);
@@ -73,15 +75,22 @@ void localInitialization(LocalMatrix* matrix, int nprocs, int nmatrix, int rank)
 }
 
 /**
+ * Checks whether the (i,j) position is a corner.
+ */
+bool corner(LocalMatrix* matrix, int i, int j) {
+    return (i == 0 && j == 0)
+        || (i == 0 && j == matrix->totalSize - 1)
+        || (i == matrix->totalSize - 1 && j == 0)
+        || (i == matrix->totalSize - 1 && j == matrix->totalSize - 1);
+}
+
+/**
  * Retrieves the (i,j) element inside the specified matrix.
  */
 double get(LocalMatrix* matrix, int i, int j) {
-    bool corner = (i == 0 && j == 0)
-               || (i == 0 && j == matrix->totalSize - 1)
-               || (i == matrix->totalSize - 1 && j == 0)
-               || (i == matrix->totalSize - 1 && j == matrix->totalSize - 1);
-    
-    if (corner) { return -4.0; }
+    if (corner(matrix, i, j)) {
+        return -4.0;
+    }
     else if (i == 0) {
         return matrix->beforeLine[j - 1];
     }
@@ -103,12 +112,9 @@ double get(LocalMatrix* matrix, int i, int j) {
  * Sets a value to the (i,j) element inside the specified matrix.
  */
 void set(LocalMatrix* matrix, int i, int j, double value) {
-    bool corner = (i == 0 && j == 0)
-               || (i == 0 && j == matrix->totalSize - 1)
-               || (i == matrix->totalSize - 1 && j == 0)
-               || (i == matrix->totalSize - 1 && j == matrix->totalSize - 1);
-    
-    if (corner) { return; }
+    if (corner(matrix, i, j)) {
+        return;
+    }
     else if (i == 0) {
         matrix->beforeLine[j - 1] = value;
     }
