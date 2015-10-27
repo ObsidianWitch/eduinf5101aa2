@@ -1,135 +1,62 @@
-/*http://cmm.ensmp.fr/~willot/tmp/*/
-
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
-
 #include "mpi.h"
+#include "tools/local_matrix.h"
 
-const int maxn = 12;
-const int before = 0;
-const int after = 1;
+const int N_MATRIX = 12;
+const float DELTA = 1.0e-6;
 
-struct LocalMatrix{
-	double* beforeLine;
-	double** tab;
-	double* afterLine;
-};
-
-// To test get
-// TODO set
-
-double get(struct LocalMatrix* matrix, int x, int y, int nprocs) {
-	if (x == 0) {
-		return matrix->beforeLine[y];
-	}
-	else if (x == maxn/nprocs+1) {
-		return matrix->afterLine[y];
-	}
-	else {
-		return matrix->tab[x-1][y];
-	}
-}
-
-double** malloc2D(int lines, int cols) {
-	double* tabBlock = malloc(lines * cols * sizeof(double));
-	double** tabLines = malloc(lines * sizeof(double*));
-	
-	for (int i = 0; i < lines; i++) {
-		tabLines[i] = &tabBlock[i*cols];
-	}
-	
-	return tabLines;
-}
-
-void free2D(double** tab){
-	free(tab[0]);
-	free(tab);
+void computeLaplaceEquation(LocalMatrix* localMatrix, int nprocs, int rank) {
+    int iStart = 1;
+    int iEnd = localMatrix->totalLines;
+    
+    if (rank == 0) { iStart++; }
+    if (rank == nprocs -1) { iEnd--; }
+    
+    double err = 1.0;
+    while (err > DELTA) {
+        err = 0;
+        for (int i = iStart ; i < iEnd - 1 ; i++) {
+            for (int j = 1 ; j < localMatrix->cols - 1 ; j++) {
+                double newValue = 0.25 * (
+                    get(localMatrix, i + 1, j) +
+                    get(localMatrix, i - 1, j) +
+                    get(localMatrix, i, j + 1) +
+                    get(localMatrix, i, j - 1)
+                );
+                
+                err += newValue - get(localMatrix, i, j);
+                err *= err;
+                set(localMatrix, i, j, newValue);
+            }
+        }
+        
+        double tmpErr;
+        MPI_Allreduce(&err, &tmpErr, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        err = sqrt(tmpErr);
+        
+        updateBoundaries(localMatrix, nprocs, rank);
+    }
 }
 
 int main(int argc, char** argv) {
-	int size, rank;
-	MPI_Init(&argc, &argv);
-	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-	MPI_Comm_size( MPI_COMM_WORLD, &size );
+    int nprocs, rank;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-	struct LocalMatrix xlocal;
-	xlocal.beforeLine = malloc(maxn * sizeof(double));
-	xlocal.afterLine = malloc(maxn * sizeof(double));
-	xlocal.tab = malloc2D(maxn/size, maxn);
+    LocalMatrix localMatrix = createLocalMatrix(nprocs, N_MATRIX, rank);
 
-	for (int i = 0; i < maxn/size; i++) {
-		for (int j = 0; j < maxn; j++){
-			xlocal.tab[i][j] = rank;
-		}
-	}
+    MPI_Barrier(MPI_COMM_WORLD);
 
-	for (int j = 0; j < maxn; j++) {
-		if (rank == 0) {
-			xlocal.beforeLine[j] = -1;
-			MPI_Send(
-				&xlocal.tab[maxn/size-1], maxn, MPI_DOUBLE,
-				rank+1, before, MPI_COMM_WORLD
-			);
-			MPI_Recv(
-				&xlocal.afterLine, maxn, MPI_DOUBLE,
-				rank+1, after, MPI_COMM_WORLD, MPI_STATUS_IGNORE
-			);
-		}
-		else if (rank == size-1) {
-			xlocal.afterLine[j] = -1;
-			MPI_Send(
-				&xlocal.tab[0], maxn, MPI_DOUBLE,
-				rank-1, after, MPI_COMM_WORLD
-			);
-			MPI_Recv(
-				&xlocal.beforeLine, maxn, MPI_DOUBLE,
-				rank-1, before, MPI_COMM_WORLD, MPI_STATUS_IGNORE
-			);
-		}
-		else {
-			MPI_Send(
-				&xlocal.tab[maxn/size-1], maxn, MPI_DOUBLE,
-				rank+1, before, MPI_COMM_WORLD
-			);
-			MPI_Send(
-				&xlocal.tab[0], maxn, MPI_DOUBLE,
-				rank-1, after, MPI_COMM_WORLD
-			);
-			MPI_Recv(
-				&xlocal.afterLine, maxn, MPI_DOUBLE,
-				rank+1, after, MPI_COMM_WORLD, MPI_STATUS_IGNORE
-			);
-			MPI_Recv(
-				&xlocal.beforeLine, maxn, MPI_DOUBLE,
-				rank-1, before, MPI_COMM_WORLD, MPI_STATUS_IGNORE
-			);
-		}
-	}
-	
-	double err = 1.0;
-	double delta = 0.001;
-	while (err > delta) {
-		err = 0;
-		for (int i = 0; i < maxn/size+2; i++) {
-			for (int j = 0; j < maxn; j++) {
-				double fnyu = 0.25 * (
-					get(&xlocal, i+1, j, size) +
-					get(&xlocal, i-1, j, size) +
-					get(&xlocal, i, j+1, size) + 
-					get(&xlocal, i, j-1, size)
-				);
-				err += fnyu - get(&xlocal, i, j, size);
-				err *= err;
-				//set(i, j, fnyu);
-			}
-		}
-		err = sqrt(err);
-	}
-	
-	free2D(xlocal.tab);
-	
-	MPI_Finalize();
-	
-	return EXIT_SUCCESS;
+    computeLaplaceEquation(&localMatrix, nprocs, rank);
+
+    WriteFullMatrix(&localMatrix, nprocs, rank);
+
+    destructLocalMatrix(&localMatrix);
+
+    MPI_Finalize();
+
+    return EXIT_SUCCESS;
 }
