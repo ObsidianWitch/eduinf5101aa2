@@ -5,14 +5,13 @@
 #include "mpi.h"
 #include "local_matrix2D.h"
 #include "array2D.h"
-#include "rank2D.h"
 
 const int DISPLAY_TAG = 4;
 
 /**
  * Creates and initializes a LocalMatrix.
  */
-LocalMatrix createLocalMatrix(int nprocs, int nmatrix, int rank) {
+LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rnk2D) {
     int innerSize = nmatrix/sqrt(nprocs);
     int totalSize = innerSize + 2;
     
@@ -26,7 +25,7 @@ LocalMatrix createLocalMatrix(int nprocs, int nmatrix, int rank) {
     localMatrix.innerSize = innerSize;
     localMatrix.totalSize = totalSize;
     
-    localInitialization(&localMatrix, nprocs, nmatrix, rank);
+    localInitialization(&localMatrix, nprocs, nmatrix, rnk2D);
     
     return localMatrix;
 }
@@ -45,8 +44,9 @@ void destructLocalMatrix(LocalMatrix* matrix) {
 /**
  * Initializes localMatrix.
  */
-void localInitialization(LocalMatrix* matrix, int nprocs, int nmatrix, int rank) {
-    Rank2D rnk2D = rank2D(nprocs, rank);
+void localInitialization(
+    LocalMatrix* matrix, int nprocs, int nmatrix, Rank2D rnk2D
+) {
     int lastElement = matrix->innerSize - 1;
     
     // fill the matrix with the same values as in the 1D case to easily check
@@ -133,52 +133,83 @@ void set(LocalMatrix* matrix, int i, int j, double value) {
 }
 
 /**
- * Writes the specified LocalMatrix to a file. Boundaries can be written by
- * setting the associated parameter to true.
+ * Writes the specified line to a file. Boundaries can be written by setting
+ * the associated parameter to true.
  */
-void writeMatrix(LocalMatrix* matrix, char* fileName, bool boundaries) {
+void writeMatrixLine(
+    LocalMatrix* matrix, char* fileName, int i, bool boundaries, bool endline
+) {
     FILE* f = fopen(fileName, "a");
-    if (f == NULL) { perror("fopen"); }
+    if (f == NULL) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
     
-    int iStart = 0;
-    int iEnd = matrix->totalSize;
     int jStart = 0;
     int jEnd = matrix->totalSize;
     
-    if (!boundaries) { iStart++; iEnd--; jStart++; jEnd--; }
+    if (!boundaries) { jStart++; jEnd--; }
     
-    for (int i = iStart ; i < iEnd ; i++) {
-        for (int j = jStart ; j < jEnd ; j++) {
-            double value = get(matrix, i, j);
-            fprintf(f, "%6.3f ", value);
-        }
-        fprintf(f, "\n");
+    for (int j = jStart ; j < jEnd ; j++) {
+        double value = get(matrix, i, j);
+        fprintf(f, "%6.3f ", value);
     }
+    
+    if (endline) { fprintf(f, "\n"); }
     
     fclose(f);
 }
 
 /**
- * Writes the full matrix by telling each process to write its LocalMatrix in
- * a file. The processes write in the correct order by using a token ring.
+ * Writes the full matrix by alterning between processes to write lines.
+ * The processes write in the correct order by using a token ring.
  * Boundaries can be written by setting the associated parameter to true.
- * TODO will write blocks sequentially, the matrix won't be correctly formatted.
+ *
+ * example:
+ * M0 (P0)   M1 (P1)
+ * M2 (P2)   M3 (P3)
+ *
+ * P0 writes first line from M0 and sends a token to P1
+ * P1 writes first line from M1 and sends a token to P0
+ * ...
+ * P0 writes last line from M0 and sends a token to P1
+ * P1 writes last line from M1 and sends a token to P2
+ * same steps for P2 & P3
  */
-void writeFullMatrix(LocalMatrix* matrix, int nprocs, int rank, bool boundaries) {
-    if (rank == 0) { remove("matrix.out"); }
+void writeFullMatrix(
+    LocalMatrix* matrix, int nprocs, Rank2D rnk2D, bool boundaries
+) {
+    bool start = (rnk2D.rank == 0);
+    if (start) { remove("matrix.out"); }
     
-    if (rank != 0) {
-        int tmp = 0;
-        MPI_Recv(
-            &tmp, 1, MPI_INT, rank - 1, DISPLAY_TAG,
-            MPI_COMM_WORLD, MPI_STATUS_IGNORE
-        );
+    int nprocsRow = sqrt(nprocs);
+    bool lastProcInRow = (rnk2D.j == nprocsRow - 1);
+    bool lastProc = (rnk2D.rank == nprocs - 1);
+    
+    int nextRank = rnk2D.rank + 1;
+    if (lastProcInRow) { nextRank = nprocsRow * rnk2D.i; }
+    
+    int iStart = 0;
+    int iEnd = matrix->totalSize;
+    if (!boundaries) { iStart++; iEnd--; }
+    
+    for (int i = iStart ; i < iEnd ; i++) {
+        if (!start) {
+            MPI_Recv(
+                NULL, 0, MPI_INT, MPI_ANY_SOURCE, DISPLAY_TAG,
+                MPI_COMM_WORLD, MPI_STATUS_IGNORE
+            );
+        } else {
+            start = false;
+        }
+        
+        writeMatrixLine(matrix, "matrix.out", i, boundaries, lastProcInRow);
+        
+        MPI_Send(NULL, 0, MPI_INT, nextRank, DISPLAY_TAG, MPI_COMM_WORLD);
     }
     
-    writeMatrix(matrix, "matrix.out", boundaries);
-    
-    if (rank != nprocs - 1) {
-        int tmp = 0;
-        MPI_Send(&tmp, 1, MPI_INT, rank + 1, DISPLAY_TAG, MPI_COMM_WORLD);
+    if (lastProcInRow && !lastProc) {
+        int rankNextRow = nprocsRow * (rnk2D.i + 1);
+        MPI_Send(NULL, 0, MPI_INT, rankNextRow, DISPLAY_TAG, MPI_COMM_WORLD);
     }
 }

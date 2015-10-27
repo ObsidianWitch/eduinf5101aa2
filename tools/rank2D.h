@@ -2,6 +2,7 @@
 #define RANK2D
 
 typedef struct Rank2D {
+    int rank;
     int i;
     int j;
 } Rank2D;

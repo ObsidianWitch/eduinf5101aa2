@@ -2,6 +2,7 @@
 #define MATRIX2D
 
 #include <stdbool.h>
+#include "rank2D.h"
 
 typedef struct LocalMatrix {
     double* beforeLine;
@@ -14,16 +15,22 @@ typedef struct LocalMatrix {
     int totalSize;
 } LocalMatrix;
 
-LocalMatrix createLocalMatrix(int nprocs, int nmatrix, int rank);
+LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rnk2D);
 void destructLocalMatrix(LocalMatrix* matrix);
 
-void localInitialization(LocalMatrix* matrix, int nprocs, int nmatrix, int rank);
+void localInitialization(
+    LocalMatrix* matrix, int nprocs, int nmatrix, Rank2D rnk2D
+);
 
 bool corner(LocalMatrix* matrix, int i, int j);
 double get(LocalMatrix* matrix, int i, int j);
 void set(LocalMatrix* matrix, int i, int j, double value);
 
-void writeMatrix(LocalMatrix* matrix, char* fileName, bool boundaries);
-void writeFullMatrix(LocalMatrix* matrix, int nprocs, int rank, bool boundaries);
+void writeMatrixLine(
+    LocalMatrix* matrix, char* fileName, int i, bool boundaries, bool endline
+);
+void writeFullMatrix(
+    LocalMatrix* matrix, int nprocs, Rank2D rnk2D, bool boundaries
+);
 
 #endif // MATRIX2D

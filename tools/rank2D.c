@@ -6,8 +6,9 @@
  */
 Rank2D rank2D(int nprocs, int rank) {
     Rank2D rank2D = {
-        .i = rank / (int) sqrt(nprocs),
-        .j = rank % (int) sqrt(nprocs)
+        .rank = rank,
+        .i    = rank / (int) sqrt(nprocs),
+        .j    = rank % (int) sqrt(nprocs)
     };
     
     return rank2D;
