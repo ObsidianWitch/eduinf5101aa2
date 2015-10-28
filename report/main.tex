@@ -118,12 +118,21 @@ typedef struct LocalMatrix {
 Pour mettre à jour les lignes de recouvrement, le programme utilise
 \hl{MPI\_Send()} pour envoyer un buffer de données avec un type choisi
 (e.g. \hl{MPI\_DOUBLE}) à un destinataire, puis \hl{MPI\_Recv()} pour recevoir
-les données qui lui sont destinées. \\
+les données qui lui sont destinées. Ces envois et réceptions ont été regroupés
+dans la fonction \hl{updateBoundaries()}. \\
 
 Après un ensemble d'actions parallèles avec ces fonctions, nous pouvons nous
 assurer à ce que les programmes lancés parallèlement se rejoignent en un même
 point dans le déroulement du programme avec la fonction \hl{MPI\_Barrier()}.
 Elle fait attendre les différentes tâches jusqu'à ce que toutes les tâches
-arrivent à cette barrière.
+arrivent à cette barrière. \\
+
+L'ordre d'arrivé des messages sur la sortie standard n'étant pas garantie en
+parallèle en utilisant \hl{printf()}, nous avons implémenté une fonction
+\hl{writeFullMatrix()} afin de pouvoir écrire la matrice dans un fichier.
+Le processus ayant le rang 0 écrit tout d'abord sa matrice dans le fichier
+puis envoie un jeton au processus suivant. \hl{MPI\_Recv()} étant bloquant,
+chaque processus attend de recevoir le jeton avant de pouvoir écrire dans le
+fichier.
 
 \end{document}
