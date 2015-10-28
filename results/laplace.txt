@@ -1,0 +1,62 @@
+laplace 1 36
+computation time: 0.111793 s
+
+laplace 1 72
+computation time: 1.864976 s
+
+laplace 1 108
+computation time: 9.300971 s
+
+laplace 1 144
+computation time: 29.476426 s
+
+laplace 1 180
+computation time: 70.525075 s
+
+
+laplace 4 36
+computation time: 1.488305 s
+
+laplace 4 72
+computation time: 6.440377 s
+
+laplace 4 108
+computation time: 15.787466 s
+
+laplace 4 144
+computation time: 31.491000 s
+
+laplace 4 180
+computation time: 54.945528 s
+
+
+laplace 9 36
+computation time: 4.644088 s
+
+laplace 9 72
+computation time: 17.235972 s
+
+laplace 9 108
+computation time: 39.982225 s
+
+laplace 9 144
+computation time: 72.280533 s
+
+laplace 9 180
+computation time: 137.704287 s
+
+
+laplace 36 36
+computation time: 27.630346 s
+
+laplace 36 72
+computation time: 96.150103 s
+
+laplace 36 108
+computation time: 220.966194 s
+
+laplace 36 144
+computation time: 398.455938 s
+
+laplace 36 180
+computation time: 684.308997 s

@@ -1,0 +1,50 @@
+pi 1 1.0e7
+computation time: 0.111315 s
+
+pi 1 1.0e8
+computation time: 1.110433 s
+
+pi 1 1.0e9
+computation time: 11.100553 s
+
+pi 1 1.0e10
+computation time: 110.997922 s
+
+
+pi 4 1.0e7
+computation time: 0.030315 s
+
+pi 4 1.0e8
+computation time: 0.279610 s
+
+pi 4 1.0e9
+computation time: 2.778888 s
+
+pi 4 1.0e10
+computation time: 27.758928 s
+
+
+pi 9 1.0e7
+computation time: 0.017002 s
+
+pi 9 1.0e8
+computation time: 0.126984 s
+
+pi 9 1.0e9
+computation time: 1.236657 s
+
+pi 9 1.0e10
+computation time: 12.344067 s
+
+
+pi 36 1.0e7
+computation time: 0.008932 s
+
+pi 36 1.0e8
+computation time: 0.066226 s
+
+pi 36 1.0e9
+computation time: 0.653338 s
+
+pi 36 1.0e10
+computation time: 6.510308 s
