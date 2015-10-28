@@ -31,6 +31,10 @@ void sendLastToBeforeLine(LocalMatrix* matrix, int nprocs2D, int rank);
 void sendFirstToAfterLine(LocalMatrix* matrix, int nprocs2D, int rank);
 void recvAfterFromFirstLine(LocalMatrix* matrix, int nprocs2D, int rank);
 void recvBeforeFromLastLine(LocalMatrix* matrix, int nprocs2D, int rank);
+void sendLastToBeforeCol(LocalMatrix* matrix, int rank);
+void sendFirstToAfterCol(LocalMatrix* matrix, int rank);
+void recvAfterFromFirstCol(LocalMatrix* matrix, int rank);
+void recvBeforeFromLastCol(LocalMatrix* matrix, int rank);
 
 void writeMatrixLine(
     LocalMatrix* matrix, char* fileName, int i, bool boundaries, bool endline

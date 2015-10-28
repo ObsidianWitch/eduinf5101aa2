@@ -9,7 +9,7 @@
 const int BEFORE_TAG = 0;
 const int AFTER_TAG = 1;
 const int LEFT_TAG = 2;
-const int RIGHT_TAG = 2;
+const int RIGHT_TAG = 3;
 const int DISPLAY_TAG = 4;
 
 MPI_Datatype ColType;
@@ -33,13 +33,15 @@ LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rank2D) {
     localMatrix.innerSize = innerSize;
     localMatrix.totalSize = totalSize;
     
+    MPI_Datatype col;
     MPI_Type_vector(
         localMatrix.innerSize, // number of blocks
         1,                     // number of elements per block
         localMatrix.innerSize, // stride
-        MPI_DOUBLE, &ColType
+        MPI_DOUBLE, &col
     );
-    MPI_Type_commit(&ColType);
+    MPI_Type_commit(&col);
+    MPI_Type_create_resized(col, 0, 1*sizeof(double), &ColType);
     
     localInitialization(&localMatrix, nprocs, nmatrix, rank2D);
     updateBoundaries(&localMatrix, nprocs, rank2D);
@@ -105,6 +107,12 @@ void updateBoundaries(LocalMatrix* matrix, int nprocs, Rank2D rank2D) {
     if (rank2D.i < nprocs2D - 1) {
         sendLastToBeforeLine(matrix, nprocs2D, rank2D.rank);
     }
+    if (rank2D.j > 0) {
+        sendFirstToAfterCol(matrix, rank2D.rank);
+    }
+    if (rank2D.j < nprocs2D - 1) {
+        sendLastToBeforeCol(matrix, rank2D.rank);
+    }
     
     // receives
     if (rank2D.i > 0) {
@@ -113,7 +121,12 @@ void updateBoundaries(LocalMatrix* matrix, int nprocs, Rank2D rank2D) {
     if (rank2D.i < nprocs2D - 1) {
         recvAfterFromFirstLine(matrix, nprocs2D, rank2D.rank);
     }
-    
+    if (rank2D.j > 0) {
+        recvBeforeFromLastCol(matrix, rank2D.rank);
+    }
+    if (rank2D.j < nprocs2D - 1) {
+        recvAfterFromFirstCol(matrix, rank2D.rank);
+    }
 }
 
 
@@ -223,6 +236,53 @@ void recvBeforeFromLastLine(LocalMatrix* matrix, int nprocs2D, int rank) {
     MPI_Recv(
         matrix->beforeLine, matrix->innerSize, MPI_DOUBLE,
         upRank(nprocs2D, rank), BEFORE_TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE
+    );
+}
+
+/**
+ * Sends the last col from the current process' inner matrix to the beforeCol
+ * of the next process
+ */
+void sendLastToBeforeCol(LocalMatrix* matrix, int rank) {
+    int lastCol = matrix->innerSize - 1;
+    MPI_Send(
+        &matrix->matrix[0][lastCol], 1, ColType,
+        rightRank(rank), LEFT_TAG, MPI_COMM_WORLD
+    );
+}
+
+/**
+ * Sends the first col from the current process' inner matrix to the afterCol
+ * of the previous process
+ */
+void sendFirstToAfterCol(LocalMatrix* matrix, int rank) {
+    MPI_Send(
+        &matrix->matrix[0][0], 1, ColType,
+        leftRank(rank), RIGHT_TAG, MPI_COMM_WORLD
+    );
+}
+
+/**
+ * Receives the first col from the next process inner matrix and stores it in
+ * the LocalMatrix's afterCol.
+ */
+void recvAfterFromFirstCol(LocalMatrix* matrix, int rank) {
+    MPI_Recv(
+        matrix->afterCol, matrix->innerSize, MPI_DOUBLE,
+        rightRank(rank), RIGHT_TAG,
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE
+    );
+}
+
+/**
+ * Receives the last col from the previous process inner matrix and stores it
+ * in the LocalMatrix's beforeCol.
+ */
+void recvBeforeFromLastCol(LocalMatrix* matrix, int rank) {
+    MPI_Recv(
+        matrix->beforeCol, matrix->innerSize, MPI_DOUBLE,
+        leftRank(rank), LEFT_TAG,
         MPI_COMM_WORLD, MPI_STATUS_IGNORE
     );
 }
