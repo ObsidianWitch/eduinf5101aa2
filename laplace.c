@@ -57,10 +57,18 @@ int main(int argc, char** argv) {
     float delta = atof(argv[2]);
 
     LocalMatrix localMatrix = createLocalMatrix(nprocs, nmatrix, rank);
-
+    
     MPI_Barrier(MPI_COMM_WORLD);
-
+    
+    double startTime;
+    if (rank == 0) { startTime = MPI_Wtime(); }
     computeLaplaceEquation(&localMatrix, nprocs, rank, delta);
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    if (rank == 0) {
+        printf("computation time: %f s\n", MPI_Wtime() - startTime);
+    }
 
     writeFullMatrix(&localMatrix, nprocs, rank, false);
 
