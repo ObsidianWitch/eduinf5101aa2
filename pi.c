@@ -41,6 +41,9 @@ int main(int argc, char** argv) {
 	}
 	double intervals = atof(argv[1]);
 	
+    double startTime;
+    if (rank == 0) { startTime = MPI_Wtime(); }
+	
 	double a = (double) rank / size;
 	double b = (double) (rank + 1) / size;
 	double localResult = 4 * arctan(a, b, intervals);
@@ -53,6 +56,7 @@ int main(int argc, char** argv) {
 	
 	if (rank == 0) {
 		writeResult(reduceBuffer);
+		printf("computation time: %f s\n", MPI_Wtime() - startTime);
 	}
 	
 	MPI_Finalize();
