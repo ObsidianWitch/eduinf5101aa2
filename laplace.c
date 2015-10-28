@@ -4,10 +4,9 @@
 #include "mpi.h"
 #include "tools/local_matrix.h"
 
-const int N_MATRIX = 12;
-const float DELTA = 1.0e-6;
-
-void computeLaplaceEquation(LocalMatrix* localMatrix, int nprocs, int rank) {
+void computeLaplaceEquation(
+    LocalMatrix* localMatrix, int nprocs, int rank, int delta
+) {
     int iStart = 1;
     int iEnd = localMatrix->totalLines;
     
@@ -15,7 +14,7 @@ void computeLaplaceEquation(LocalMatrix* localMatrix, int nprocs, int rank) {
     if (rank == nprocs -1) { iEnd--; }
     
     double err = 1.0;
-    while (err > DELTA) {
+    while (err > delta) {
         err = 0;
         for (int i = iStart ; i < iEnd - 1 ; i++) {
             for (int j = 1 ; j < localMatrix->cols - 1 ; j++) {
@@ -45,12 +44,23 @@ int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    
+    if (argc < 3) {
+        printf(
+            "Missing arguments\n"
+            "Usage : %s N_MATRIX DELTA\n",
+            argv[0]
+        );
+        return EXIT_FAILURE;
+    }
+    int nmatrix = atoi(argv[1]);
+    float delta = atof(argv[2]);
 
-    LocalMatrix localMatrix = createLocalMatrix(nprocs, N_MATRIX, rank);
+    LocalMatrix localMatrix = createLocalMatrix(nprocs, nmatrix, rank);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    computeLaplaceEquation(&localMatrix, nprocs, rank);
+    computeLaplaceEquation(&localMatrix, nprocs, rank, delta);
 
     writeFullMatrix(&localMatrix, nprocs, rank, false);
 
