@@ -72,12 +72,6 @@
 \begin{document}
 \maketitle
 \newpage
-\tableofcontents
-\newpage
-
-\section{Introduction}
-
-%TODO
 
 \section{Calcul de $\pi$}
 
@@ -87,35 +81,44 @@ pour atteindre la plus grande précision, il faudra effectuer les calculs avec
 des très petits pas entre les bornes de l'intervalle. En procédant de cette
 façon, le calcul de la valeur de $\pi$ demandera beaucoup de temps. A l'aide de
 la bibliothèque MPI, nous pouvons paralléliser ces calculs sur un nombre de
-processeurs que nous choisissons. Il est ainsi possible d'accélérer le calcul
-de $\pi$. \\
+processeurs que nous choisissons. \\
 
 Pour implémenter cette théorie, nous avons fait en sorte que chaque processeur
-qui exécute le programme se détermine des bornes d'intervale en fonction de
+qui exécute le programme se détermine des bornes d'intervalle en fonction de
 leur numéro de tâche. Lorsque tous les calculs sont terminés, nous utilisons la
-fonction \hl{MPI\_Reduce()} qui est ici configurée pour calculer la somme de
-toutes les valeurs obtenues par chaque processeur.
+fonction \hl{MPI\_Reduce()} qui est ici configurée pour calculer sur le
+processeur 0 la somme de toutes les valeurs obtenues par chaque processeur.
 
 \section{Structure de données en parallèle}
 
 Dans l'exécution d'algorithme avec des matrices, nous avons tendance à diviser
 les données entre les processeurs qui participent à la parallélisation.
-Cependant, il arrive que les processeurs aient besoin de données voisines dans
-la matrice possédées par les autres processeurs. C'est pourquoi, nous faisons
-du recouvrement de données qui permet aux processeurs d'avoir les données
-nécessaires pour faire les opérations de l'algorithme à implémenter. \\
+Cependant, il arrive que ceux-ci aient besoin de données voisines stockées sur
+les autres processeurs. C'est pourquoi nous faisons du recouvrement de données.
 
-Dans cet exercice, nous divisions une matrice en matrices de même taille pour
-les processeurs. Une fois que cela est fait, deux lignes sont ajoutées autour
+Dans cet exercice, nous faisons une décomposition 1D d'une matrice sur plusieurs
+processus. Une fois que cela est fait, deux lignes sont ajoutées autour
 de cette matrice et représentent la dernière ligne du processeur de numéro
 précédent dans le classement des tâches et la première ligne du processeur de
 numéro suivant. C'est le recouvrement de données. \\
 
-Pour effectuer le recouvrement, le programme utilise \hl{MPI\_Send()} pour
-envoyer un buffer de données avec un type choisi à un destinataire, puis
-\hl{MPI\_Recv()} pour recevoir les données qui lui sont destinées. \\
+\begin{lstlisting}
+typedef struct LocalMatrix {
+    double* beforeLine;
+    double** matrix;
+    double* afterLine;
 
-%TODO Include listing when fixed
+    int innerLines;
+    int totalLines;
+    int cols;
+} LocalMatrix;
+\end{lstlisting}
+\
+
+Pour mettre à jour les lignes de recouvrement, le programme utilise
+\hl{MPI\_Send()} pour envoyer un buffer de données avec un type choisi
+(e.g. \hl{MPI\_DOUBLE}) à un destinataire, puis \hl{MPI\_Recv()} pour recevoir
+les données qui lui sont destinées. \\
 
 Après un ensemble d'actions parallèles avec ces fonctions, nous pouvons nous
 assurer à ce que les programmes lancés parallèlement se rejoignent en un même
