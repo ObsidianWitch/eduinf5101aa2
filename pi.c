@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 		);
 		return EXIT_FAILURE;
 	}
-	double intervals = strtod(argv[1], NULL);
+	double intervals = atof(argv[1]);
 	
 	double a = (double) rank / size;
 	double b = (double) (rank + 1) / size;
