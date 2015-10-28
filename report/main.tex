@@ -134,5 +134,44 @@ Le processus ayant le rang 0 écrit tout d'abord sa matrice dans le fichier
 puis envoie un jeton au processus suivant. \hl{MPI\_Recv()} étant bloquant,
 chaque processus attend de recevoir le jeton avant de pouvoir écrire dans le
 fichier.
+\newpage
+
+\section{Équation de Laplace}
+
+Nous avons implémenté la résolution de l'équation de Laplace en parallèle en
+utilisant la structure de données définie dans la section précédente.\\
+
+Tant que la convergence n'est pas atteinte, tous les pixels de la matrice
+locale sont parcourus (à l'exception des pixels sur les bords) et pour chacun
+d'entre eux une nouvelle valeur est calculée à partir des 4 pixels adjacents.
+La convergence est atteinte lorsque l'erreur est plus faible qu'un paramètre
+\hl{delta} défini au préalable. A la fin de chaque parcours complet de la
+matrice, les lignes de recouvrement sont mises à jour.\\
+
+Notre première approche avait été de laisser chaque processus converger à des
+moments différents, et utiliser un système de jetons afin de prévenir les
+processus adjacents de la convergence d'un processus. Cette approche avait
+pour désavantage d'allourdir la syntaxe, et de se retrouver avec des cas
+particuliers pénibles à gérer au niveau des envois et réceptions (e.g.
+P0 converge, envoie ses lignes de recouvrement et envoie un jeton prévenant
+les processus adjacents de sa convergence. P1 reçoit le jeton et ignore la
+nouvelle ligne de convergences de P0.\\
+
+La seconde approche, qui est actuellement utilisée, est de se servir de
+\hl{MPI\_AllReduce()} afin de calculer sur tous les processus la somme des
+erreurs de tous les processus. Ainsi, les processus convergeront au même
+moment.
+
+\begin{lstlisting}
+while (err > delta) {
+	// compute one step of Laplace's equation
+	
+    double tmpErr;
+    MPI_Allreduce(&err, &tmpErr, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    err = sqrt(tmpErr);
+	
+	// update boundaries
+}
+\end{lstlisting}
 
 \end{document}
