@@ -1,5 +1,5 @@
 #!/bin/bash
-NODES = `echo gemini{1..12} | sed 's/ /,/g'`
+NODES=`echo gemini{1..12} | sed 's/ /,/g'`
 TASKS=4
 
 INTERVALS=1.0e8
