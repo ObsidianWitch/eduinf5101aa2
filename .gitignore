@@ -1,5 +1,6 @@
 *.irlog
 *.out
+*.o
 
 *.pdf
 *.aux
