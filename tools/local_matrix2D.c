@@ -42,6 +42,7 @@ LocalMatrix createLocalMatrix(int nprocs, int nmatrix, Rank2D rank2D) {
     );
     MPI_Type_commit(&col);
     MPI_Type_create_resized(col, 0, 1*sizeof(double), &ColType);
+    MPI_Type_commit(&ColType);
     
     localInitialization(&localMatrix, nprocs, nmatrix, rank2D);
     updateBoundaries(&localMatrix, nprocs, rank2D);
