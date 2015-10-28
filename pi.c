@@ -4,8 +4,6 @@
 
 #include "mpi.h"
 
-const double INTERVALS = 1.0e8;
-
 double arctan(double a, double b, double n) {
 	double sum = 0;
 	for (double x = a ; x < b ; x += 1./n) {
@@ -14,15 +12,38 @@ double arctan(double a, double b, double n) {
 	return sum;
 }
 
+void writeResult(double reduceBuffer) {
+	FILE* f = fopen("pi_result.out", "w");
+    if (f == NULL) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+	
+	fprintf(f, "%.42f\n", reduceBuffer);
+	fprintf(f, "%.42f\n", M_PI);
+	
+	fclose(f);
+}
+
 int main(int argc, char** argv) {
 	int size, rank;
 	MPI_Init(&argc, &argv);
-	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-	MPI_Comm_size( MPI_COMM_WORLD, &size );
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	
+	if (argc < 2) {
+		printf(
+			"Missing arguments\n"
+			"Usage : %s INTERALS\n",
+			argv[0]
+		);
+		return EXIT_FAILURE;
+	}
+	double intervals = strtod(argv[1], NULL);
 	
 	double a = (double) rank / size;
 	double b = (double) (rank + 1) / size;
-	double localResult = 4 * arctan(a, b, INTERVALS);
+	double localResult = 4 * arctan(a, b, intervals);
 	
 	double reduceBuffer;
 	MPI_Reduce(
@@ -31,8 +52,7 @@ int main(int argc, char** argv) {
 	);
 	
 	if (rank == 0) {
-		printf("%.42f\n", reduceBuffer);
-		printf("%.42f\n", M_PI);
+		writeResult(reduceBuffer);
 	}
 	
 	MPI_Finalize();
