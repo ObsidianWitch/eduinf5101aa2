@@ -185,7 +185,12 @@ $\frac{nmatrix}{\sqrt{nprocs}}$.\\
 De plus, 2 colonnes de recouvrement ont été ajoutées en plus des 2 lignes de
 recouvrement précédentes. Cela implique qu'il faille des communications
 supplémentaires pour mettre à jour la zone de recouvrement (2 * \hl{MPI\_Send()}
-\& 2 * \hl{MPI\_Recv()} supplémentaires).\\
+\& 2 * \hl{MPI\_Recv()} supplémentaires). Dans le cas de la décomposition 1D,
+chaque processus envoyait $2 * nmatrix$ éléments (2 lignes). Pour la
+décomposition 2D, nous envoyons $4 * \frac{nmatrix}{\sqrt{nprocs}}$ éléments,
+(2 lignes \& 2 colonnes). La décomposition 2D nous permet donc de diminuer le
+nombre d'éléments à envoyer lorsque le nombre de processus augmente, ce qui
+n'était pas le cas de la décomposition 1D.\\
 
 Pour mettre à jour les colonnes de recouvrement, il faut tout d'abord envoyer
 la première colonne de la matrice locale au processus de gauche, et la dernière
@@ -193,6 +198,7 @@ colonne au processus de droite. Envoyer une colonne ne peut pas être effectué
 directement, sachant que nous travaillons en \emph{row-major order}. Plutôt que
 d'effectuer un \hl{MPI\_Send()} pour chaque élément de la colonne, nous pouvons
 définir un nouveau type à l'aide de \hl{MPI\_Type\_vector()}.\\
+\newpage
 
 \begin{lstlisting}
 MPI_Datatype col;
@@ -245,8 +251,6 @@ recevoir \hl{localMatrix.innerSize} éléments de type \hl{MPI\_DOUBLE}
 \end{tabular}
 \end{table}
 
-\vspace{-1em}
-
 \begin{table}[h!]
 \begin{tabular}{|l|c|c|c|l|}
 \hline
@@ -259,8 +263,7 @@ recevoir \hl{localMatrix.innerSize} éléments de type \hl{MPI\_DOUBLE}
 180 & 70.525075 s                       & \cellcolor{lightgreen}54.945528 s & 137.704287 s & 684.308997 s \\ \hline
 \end{tabular}
 \end{table}
-
-\vspace{-1em}
+\newpage
 
 \begin{table}[h!]
 \begin{tabular}{|l|c|c|c|l|}
@@ -279,6 +282,8 @@ recevoir \hl{localMatrix.innerSize} éléments de type \hl{MPI\_DOUBLE}
 
 Pour les tailles de matrice testées, Laplace 1D obtient les meilleurs
 temps de calcul. Cependant, Laplace 2D obtient des temps de calcul plus faibles
-que la version 1D lorsque le nombre de processus est plus grand.
+que la version 1D lorsque le nombre de processus est plus grand. Cette dernière
+observation s'explique par le nombre d'éléments à envoyer diminuant lorsque le
+nombre de processus augmente dans le cas de la décomposition 2D.
 
 \end{document}
