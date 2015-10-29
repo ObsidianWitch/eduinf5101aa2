@@ -179,7 +179,7 @@ while (err > delta) {
 
 Dans le cas précédent (décomposition 1D), chaque processus possédait une matrice
 $\frac{nmatrix}{nprocs}$ lignes \& $nmatrix$ colonnes. Dans le cas de la
-décomposition 2D, chaque processus possède une matrice carré de taille
+décomposition 2D, chaque processus possède une matrice carrée de taille
 $\frac{nmatrix}{\sqrt{nprocs}}$.\\
 
 De plus, 2 colonnes de recouvrement ont été ajoutées en plus des 2 lignes de
@@ -254,7 +254,7 @@ recevoir \hl{localMatrix.innerSize} éléments de type \hl{MPI\_DOUBLE}
 \begin{table}[h!]
 \begin{tabular}{|l|c|c|c|l|}
 \hline
-\multicolumn{5}{|c|}{Laplace 1D}                              \\ \hline
+\multicolumn{5}{|c|}{Laplace 1D ($err \leq 10^{-6}$)}                              \\ \hline
 \diaghead{aaaaaaaaaaaa}{nmatrix}{nprocs} & 1           & 4           & 9            & 36           \\ \hline
 36  & \cellcolor{lightgreen}0.111793 s  & 1.488305 s                        & 4.644088 s   & 27.630346 s  \\ \hline
 72  & \cellcolor{lightgreen}1.864976 s  & 6.440377 s                        & 17.235972 s  & 96.150103 s  \\ \hline
@@ -268,7 +268,7 @@ recevoir \hl{localMatrix.innerSize} éléments de type \hl{MPI\_DOUBLE}
 \begin{table}[h!]
 \begin{tabular}{|l|c|c|c|l|}
 \hline
-\multicolumn{5}{|c|}{Laplace 2D}                                \\ \hline
+\multicolumn{5}{|c|}{Laplace 2D ($err \leq 10^{-6}$)}                                \\ \hline
 \diaghead{aaaaaaaaaaaa}{nmatrix}{nprocs} & 1            & 4            & 9            & 36           \\ \hline
 36  & \cellcolor{lightgreen}0.219014 s   & 1.084970 s                         & 2.238108 s   & 2.762289 s   \\ \hline
 72  & \cellcolor{lightgreen}3.657851 s   & 4.937405 s                         & 8.808075 s   & 14.282993 s  \\ \hline
