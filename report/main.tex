@@ -23,6 +23,7 @@
 \definecolor{darkred}{rgb}{0.85,0.33,0.31}
 \definecolor{lightblue}{HTML}{EBF5FA}
 \definecolor{lightblue2}{HTML}{E3F2FA}
+\definecolor{lightgreen}{HTML}{71E64A}
 \definecolor{darkblue}{HTML}{D2DCE1}
 \definecolor{lightyellow}{HTML}{FFFAE6}
 \definecolor{darkyellow}{HTML}{FAE6BE}
@@ -229,5 +230,55 @@ MPI_Type_commit(&ColType);
 Nous pouvons donc maintenant envoyer une colonne de type \hl{ColType}, et
 recevoir \hl{localMatrix.innerSize} éléments de type \hl{MPI\_DOUBLE}
 (une ligne).
+
+\section{Benchmark}
+
+\begin{table}[h!]
+\begin{tabular}{|l|c|c|c|l|}
+\hline
+\multicolumn{5}{|c|}{Pi}                                       \\ \hline
+\diaghead{aaaaaaaaaa}{interv.}{nprocs} & 1            & 4           & 9           & 36         \\ \hline
+1.0e7  & 0.111315 s   & 0.030315 s  & 0.017002 s  & \cellcolor{lightgreen}0.008932 s \\ \hline
+1.0e8  & 1.110433 s   & 0.279610 s  & 0.126984 s  & \cellcolor{lightgreen}0.066226 s \\ \hline
+1.0e9  & 11.100553 s  & 2.778888 s  & 1.236657 s  & \cellcolor{lightgreen}0.653338 s \\ \hline
+1.0e10 & 110.997922 s & 27.758928 s & 12.344067 s & \cellcolor{lightgreen}6.510308 s \\ \hline
+\end{tabular}
+\end{table}
+
+\vspace{-1em}
+
+\begin{table}[h!]
+\begin{tabular}{|l|c|c|c|l|}
+\hline
+\multicolumn{5}{|c|}{Laplace 1D}                              \\ \hline
+\diaghead{aaaaaaaaaaaa}{nmatrix}{nprocs} & 1           & 4           & 9            & 36           \\ \hline
+36  & \cellcolor{lightgreen}0.111793 s  & 1.488305 s                        & 4.644088 s   & 27.630346 s  \\ \hline
+72  & \cellcolor{lightgreen}1.864976 s  & 6.440377 s                        & 17.235972 s  & 96.150103 s  \\ \hline
+108 & \cellcolor{lightgreen}9.300971 s  & 15.787466 s                       & 39.982225 s  & 220.966194 s \\ \hline
+144 & \cellcolor{lightgreen}29.476426 s & 31.491000 s                       & 72.280533 s  & 398.455938 s \\ \hline
+180 & 70.525075 s                       & \cellcolor{lightgreen}54.945528 s & 137.704287 s & 684.308997 s \\ \hline
+\end{tabular}
+\end{table}
+
+\vspace{-1em}
+
+\begin{table}[h!]
+\begin{tabular}{|l|c|c|c|l|}
+\hline
+\multicolumn{5}{|c|}{Laplace 2D}                                \\ \hline
+\diaghead{aaaaaaaaaaaa}{nmatrix}{nprocs} & 1            & 4            & 9            & 36           \\ \hline
+36  & \cellcolor{lightgreen}0.219014 s   & 1.084970 s                         & 2.238108 s   & 2.762289 s   \\ \hline
+72  & \cellcolor{lightgreen}3.657851 s   & 4.937405 s                         & 8.808075 s   & 14.282993 s  \\ \hline
+108 & 18.342742 s                        & \cellcolor{lightgreen}13.659933 s  & 20.358381 s  & 29.913704 s  \\ \hline
+144 & 57.801533 s                        & \cellcolor{lightgreen}30.768816 s  & 38.485890 s  & 51.611273 s  \\ \hline
+180 & 139.236856 s                       & \cellcolor{lightgreen}63.491195 s  & 65.181726 s  & 86.970718 s  \\ \hline
+216 & 289.749480 s                       & \cellcolor{lightgreen}113.419590 s & 138.083669 s & 156.648471 s \\ \hline
+252 & 526.033825 s                       & \cellcolor{lightgreen}186.899420 s & 201.120697 s & 213.800121 s \\ \hline
+\end{tabular}
+\end{table}
+
+Pour les tailles de matrice testées, Laplace 1D obtient les meilleurs
+temps de calcul. Cependant, Laplace 2D obtient des temps de calcul plus faibles
+que la version 1D lorsque le nombre de processus est plus grand.
 
 \end{document}
