@@ -151,7 +151,7 @@ matrice, les lignes de recouvrement sont mises à jour.\\
 Notre première approche avait été de laisser chaque processus converger à des
 moments différents, et utiliser un système de jetons afin de prévenir les
 processus adjacents de la convergence d'un processus. Cette approche avait
-pour désavantage d'allourdir la syntaxe, et de se retrouver avec des cas
+pour désavantage d'alourdir la syntaxe, et de se retrouver avec des cas
 particuliers pénibles à gérer au niveau des envois et réceptions (e.g.
 P0 converge, envoie ses lignes de recouvrement et envoie un jeton prévenant
 les processus adjacents de sa convergence. P1 reçoit le jeton et ignore la
@@ -173,5 +173,61 @@ while (err > delta) {
 	// update boundaries
 }
 \end{lstlisting}
+
+\section{Décomposition 2D}
+
+Dans le cas précédent (décomposition 1D), chaque processus possédait une matrice
+$\frac{nmatrix}{nprocs}$ lignes \& $nmatrix$ colonnes. Dans le cas de la
+décomposition 2D, chaque processus possède une matrice carré de taille
+$\frac{nmatrix}{\sqrt{nprocs}}$.\\
+
+De plus, 2 colonnes de recouvrement ont été ajoutées en plus des 2 lignes de
+recouvrement précédentes. Cela implique qu'il faille des communications
+supplémentaires pour mettre à jour la zone de recouvrement (2 * \hl{MPI\_Send()}
+\& 2 * \hl{MPI\_Recv()} supplémentaires).\\
+
+Pour mettre à jour les colonnes de recouvrement, il faut tout d'abord envoyer
+la première colonne de la matrice locale au processus de gauche, et la dernière
+colonne au processus de droite. Envoyer une colonne ne peut pas être effectué
+directement, sachant que nous travaillons en \emph{row-major order}. Plutôt que
+d'effectuer un \hl{MPI\_Send()} pour chaque élément de la colonne, nous pouvons
+définir un nouveau type à l'aide de \hl{MPI\_Type\_vector()}.\\
+
+\begin{lstlisting}
+MPI_Datatype col;
+MPI_Type_vector(
+    localMatrix.innerSize, // number of blocks
+    1,                     // number of elements per block
+    localMatrix.innerSize, // stride
+    MPI_DOUBLE, &col
+);
+MPI_Type_commit(&col);
+\end{lstlisting}
+\
+
+Le listing ci-dessus décrit un type de donnée comportant
+\hl{localMatrix.innerSize} blocs de 1 élément, sachant que chaque bloc sera
+séparé par \hl{localMatrix.innerSize} éléments. Nous avons donc décrit un
+type représentant une colonne.\\
+
+Cela n'est cependant pas suffisant. Nous stockons les colonnes de recouvrements
+(\hl{localMatrix.beforeCol} \& \hl{localMatrix.afterCol}) sous forme de lignes.
+Si nous utilisons le type précédemment créé, nous envoyons les colonnes avec
+le type \hl{col} et nous sommes obligés de recevoir un élément de type \hl{col}
+également. Procéder ainsi nécessiterait une étape supplémentaire après
+réception des données (réception d'une colonne dans un buffer puis copie des
+éléments de la colonne dans la colonne de recouvrement).
+\hl{MPI\_Type\_create\_resized()} permet de définir un nouveau type à partir du
+type précédemment créé, et de définir l'espacement entre les éléments.\\
+
+\begin{lstlisting}
+MPI_Type_create_resized(col, 0, 1*sizeof(double), &ColType);
+MPI_Type_commit(&ColType);
+\end{lstlisting}
+\
+
+Nous pouvons donc maintenant envoyer une colonne de type \hl{ColType}, et
+recevoir \hl{localMatrix.innerSize} éléments de type \hl{MPI\_DOUBLE}
+(une ligne).
 
 \end{document}
